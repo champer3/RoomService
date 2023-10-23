@@ -1,0 +1,4 @@
+# Ignore the 'node_modules' directory
+node_modules/
+# Ignore config.env file because it contains sensitive information
+*.env

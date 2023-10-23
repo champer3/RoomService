@@ -1,0 +1,23 @@
+{
+  "name": "roomservice",
+  "version": "1.0.0",
+  "description": "An Ecommerce Mobile Application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/champer3/RoomService.git"
+  },
+  "author": "Stephen Okunola",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/champer3/RoomService/issues"
+  },
+  "homepage": "https://github.com/champer3/RoomService#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^3.0.1"
+  }
+}
