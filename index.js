@@ -16,6 +16,7 @@ console.log(process.env.NODE_ENV)
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
+    dbName: 'RoomService'
     // useCreateIndex: true,
     // useFindAndModify: false
   })
