@@ -1,41 +1,42 @@
-const express = require('express')
-const morgan = require('morgan')
-const User = require('./Models/userModel')
+const express = require("express");
+const morgan = require("morgan");
+// const User = require("./Models/userModel");
+const userRoutes = require("./routes/userRoutes")
 
-const app = express()
+const app = express();
 
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 
-app.use(express.json())
+app.use(express.json());
 
 app.use((req, res, next) => {
-    req.requestTime = new Date().toISOString();
-    console.log(req.requestTime)
-    next();
-  });
-
-app.get('/', (req, res) => {
-    res.send('Hello, Worlddddddddddddd!');
+  req.requestTime = new Date().toISOString();
+  console.log(req.requestTime);
+  next();
 });
 
-app.post('/user', async (req, res) => {
-    try {
+app.use('/api/v1/users', userRoutes)
 
-        const newUser = await User.create(req.body);
+// app.get("/", (req, res) => {
+//   res.send("Hello, Worlddddddddddddd!");
+// });
 
-        res.status(201).json({
-          status: 'success',
-          data: {
-            user: newUser
-          }
-        });
-      } catch (err) {
-        res.status(400).json({
-          status: 'fail',
-          message: err
-        });
-      }
-})
+// app.post("/user", async (req, res) => {
+//   try {
+//     const newUser = await User.create(req.body);
 
+//     res.status(201).json({
+//       status: "success",
+//       data: {
+//         user: newUser,
+//       },
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       status: "fail",
+//       message: err,
+//     });
+//   }
+// });
 
-module.exports = app
+module.exports = app;
