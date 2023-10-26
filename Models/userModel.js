@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide a password"],
       minlength: 8,
-      select: false,
+      // select: false,
     },
     passwordConfirm: {
       type: String,
@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema(
       validate: {
         // This only works on CREATE and SAVE!!!
         validator: function (el) {
-          return el === this.password;
+          return el === this.get("password");
         },
         message: "Passwords are not the same!",
       },
@@ -87,6 +87,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: new Date(),
     },
+    reviews: [{
+      type: mongoose.Schema.ObjectId,
+      ref: 'Review'
+    }]
   },
   {
     toJSON: { virtuals: true },

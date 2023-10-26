@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const Tour = require('./tourModel');
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -18,8 +17,8 @@ const reviewSchema = new mongoose.Schema(
     },
     pruductID: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Tour',
-      required: [true, 'Review must belong to a tour.']
+      ref: 'Product',
+      required: [true, 'Review must belong to a Product.']
     },
     userID: {
       type: mongoose.Schema.ObjectId,
