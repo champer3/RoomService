@@ -56,7 +56,8 @@ exports.createUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.find({email: req.params.user});
-    await User.findByIdAndDelete(user.id)
+    console.log(user[0].id)
+    await User.findByIdAndDelete(user[0].id)
 
     res.status(204).json({
       status: "success",
@@ -73,14 +74,14 @@ exports.deleteUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const user = await User.find({email: req.params.user});
-    const upUser = await User.findByIdAndUpdate(user.id, req.body, {
+    const updatedUser = await User.findByIdAndUpdate(user[0].id, req.body, {
       new: true,
       runValidators: true
     });
 
-    res.status(204).json({
+    res.status(200).json({
       status: "success",
-      data: null,
+      user: updatedUser,
     });
   } catch (err) {
     res.status(400).json({

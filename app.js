@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 // const User = require("./Models/userModel");
 const userRoutes = require("./routes/userRoutes")
+const productRoutes = require("./routes/productRoutes")
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/v1/users', userRoutes)
+app.use('/api/v1/products', productRoutes)
 
 // app.get("/api/v1/users", (req, res) => {
 //   res.send("Hello, Worlddddddddddddd!");
