@@ -20,5 +20,7 @@ app.use((req, res, next) => {
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/products', productRoutes)
 app.use('/api/v1/reviews', reviewRoutes)
+app.use('/api/v1/orders', reviewRoutes)
+app.use('/api/v1/cart', reviewRoutes)
 
 module.exports = app;
