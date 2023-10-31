@@ -1,24 +1,26 @@
 const mongoose = require('mongoose');
 
-const reviewSchema = new mongoose.Schema(
+const communicationSchema = new mongoose.Schema(
   {
-    review: {
+    subject: {
       type: String,
-      required: [true, 'Review can not be empty!']
     },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5
+    body: {
+      type: String,
+      required: [true, "A communication must always have a body"]
     },
     createdAt: {
       type: Date,
-      default: Date.now
+      default: Date.now()
     },
-    pruductID: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Product',
-      required: [true, 'Review must belong to a Product.']
+    statuts: {
+      type: String,
+      enum: ['resolved', 'read', 'in-progress'],
+      default: "in-progress"
+    },
+    communicationType: {
+      type: String,
+      enum: ['email', 'sms', 'in-app']
     },
     userID: {
       type: mongoose.Schema.ObjectId,
@@ -32,6 +34,6 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-const Review = mongoose.model('Review', reviewSchema);
+const Communication = mongoose.model('Communication', communicationSchema);
 
-module.exports = Review;
+module.exports = Communication;

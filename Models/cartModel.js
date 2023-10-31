@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema(
+const cartSchema = new mongoose.Schema(
   {
     dateUpdate: {
       type: Date,
@@ -21,6 +21,7 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "User",
       required: [true, "Review must belong to a user"],
+      unique: true
     }
   },
   {
@@ -29,6 +30,6 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-const Order = mongoose.model("Order", productSchema);
+const Cart = mongoose.model("Cart", cartSchema);
 
-module.exports = Order;
+module.exports = Cart;

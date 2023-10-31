@@ -87,10 +87,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: new Date(),
     },
-    reviews: [{
+    cart: [{
       type: mongoose.Schema.ObjectId,
-      ref: 'Review'
-    }]
+      ref: 'Cart'
+    }],
+    order: [{
+      type: mongoose.Schema.ObjectId,
+      ref: 'Order'
+    }],
   },
   {
     toJSON: { virtuals: true },

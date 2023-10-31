@@ -1,9 +1,11 @@
 const express = require("express");
 const morgan = require("morgan");
-// const User = require("./Models/userModel");
 const userRoutes = require("./routes/userRoutes")
 const productRoutes = require("./routes/productRoutes")
 const reviewRoutes = require("./routes/reviewRoutes")
+const orderRoutes = require("./routes/orderRoutes")
+const cartRoutes = require("./routes/cartRoutes")
+const communicationRoutes = require("./routes/communicationRoutes")
 
 const app = express();
 
@@ -20,7 +22,8 @@ app.use((req, res, next) => {
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/products', productRoutes)
 app.use('/api/v1/reviews', reviewRoutes)
-app.use('/api/v1/orders', reviewRoutes)
-app.use('/api/v1/cart', reviewRoutes)
+app.use('/api/v1/orders', orderRoutes)
+app.use('/api/v1/cart', cartRoutes)
+app.use('/api/v1/communications', communicationRoutes)
 
 module.exports = app;

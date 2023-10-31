@@ -1,4 +1,5 @@
 const Cart = require("./../Models/cartModel");
+const User = require("./../Models/userModel")
 
 exports.getAllCarts = async (req, res) => {
   try {
@@ -21,6 +22,10 @@ exports.getAllCarts = async (req, res) => {
 exports.createCart = async (req, res) => {
   try {
     const cart = await Cart.create(req.body);
+    const user = await User.findById(cart.userID)
+    user.cart.push(cart._id)
+    user.save()
+    console.log("done")
 
     res.status(201).json({
       status: "success",

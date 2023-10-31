@@ -9,7 +9,7 @@ router
   .post(orderController.createOrder);
 
 router
-  .route("/:product")
+  .route("/:order")
   .get(orderController.getOrder)
   .patch(orderController.updateOrder)
   .delete(orderController.deleteOrder);

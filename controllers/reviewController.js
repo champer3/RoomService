@@ -1,5 +1,4 @@
 const Review = require("./../Models/reviewModel");
-const User = require("./../Models/userModel")
 
 exports.getAllReviews = async (req, res) => {
   try {
@@ -22,9 +21,6 @@ exports.getAllReviews = async (req, res) => {
 exports.createReview = async (req, res) => {
   try {
     const review = await Review.create(req.body);
-    const user = await User.findById(review.userID)
-    user.reviews.push(review._id)
-    user.save()
 
     res.status(201).json({
       status: "success",
@@ -47,6 +43,24 @@ exports.getReview = async (req, res) => {
       status: "success",
       data: {
         review,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+
+exports.getUserReview = async (req, res) => {
+  try {
+    const userReviews = await Review.find({userID: req.params.userReviews});
+    res.status(200).json({
+      status: "success",
+      results: userReviews.length,
+      data: {
+        reviews: userReviews,
       },
     });
   } catch (err) {

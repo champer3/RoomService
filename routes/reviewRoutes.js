@@ -8,8 +8,9 @@ router
   .get(reviewController.getAllReviews)
   .post(reviewController.createReview);
 
+router.route("/:userReviews").get(reviewController.getUserReview)
 router
-  .route("/:product")
+  .route("/:review")
   .get(reviewController.getReview)
   .patch(reviewController.updateReview)
   .delete(reviewController.deleteReview);
