@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       lowercase: true,
+      required: [true, "Please provide your phoneNumber"],
       validate: [
         validator.isMobilePhone,
         "Please provide a valid phone number",
@@ -48,13 +49,13 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Please provide a password"],
+      // required: [true, "Please provide a password"],
       minlength: 8,
       // select: false,
     },
     passwordConfirm: {
       type: String,
-      required: [true, "Please confirm your password"],
+      // required: [true, "Please confirm your password"],
       validate: {
         // This only works on CREATE and SAVE!!!
         validator: function (el) {
