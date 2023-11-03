@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("./../Models/userModel");
-const { promisify } = require('util');
+const { promisify } = require("util");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -63,8 +63,8 @@ exports.login = async (req, res, next) => {
     }
     const user = await User.findOne({ email });
     const correct = await user.correctPassword(password, user.password);
-    console.log(password, user.password)
-    console.log(correct)
+    console.log(password, user.password);
+    console.log(correct);
 
     if (!user || !correct) {
       res.status(401).json({
@@ -114,25 +114,44 @@ exports.protect = async (req, res, next) => {
   console.log(decoded);
   next();
 
-  // // 3) Check if user still exists
-  // const currentUser = await User.findById(decoded.id);
-  // if (!currentUser) {
-  //   return next(
-  //     new AppError(
-  //       'The user belonging to this token does no longer exist.',
-  //       401
-  //     )
-  //   );
-  // }
+  // 3) Check if user still exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      res.status(401).json({
+        status: "fail",
+        message: "This user does not exist",
+      })
+    );
+  }
 
-  // // 4) Check if user changed password after the token was issued
-  // if (currentUser.changedPasswordAfter(decoded.iat)) {
-  //   return next(
-  //     new AppError('User recently changed password! Please log in again.', 401)
-  //   );
-  // }
+  // 4) Check if user changed password after the token was issued
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      res.status(401).json({
+        status: "fail",
+        message: "User recently changed password! Please login again",
+      })
+    );
+  }
 
-  // // GRANT ACCESS TO PROTECTED ROUTE
-  // req.user = currentUser;
-  // next();
+  // GRANT ACCESS TO PROTECTED ROUTE
+  req.user = currentUser;
+  next();
+};
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // roles ['admin', 'lead-guide']. role='user'
+    if (!roles.includes(req.user.role)) {
+      return next(
+        res.status(403).json({
+          status: "fail",
+          message: "You do not have permission to perform this action",
+        })
+      );
+    }
+
+    next();
+  };
 };
