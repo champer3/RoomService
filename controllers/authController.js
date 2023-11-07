@@ -1,9 +1,18 @@
+const crypto = require('crypto');
 const jwt = require("jsonwebtoken");
 const User = require("./../Models/userModel");
 const { promisify } = require("util");
 const sendEmail = require("./../utils/email");
 
+
+const signToken = id => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN
+  });
+};
+
 const createSendToken = (user, statusCode, res) => {
+  console.log('here')
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
@@ -11,13 +20,14 @@ const createSendToken = (user, statusCode, res) => {
     ),
     httpOnly: true
   };
+  console.log('here2')
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
 
   // Remove password from output
   user.password = undefined;
-
+  // console.log('here2')
   res.status(statusCode).json({
     status: 'success',
     token,
@@ -55,18 +65,7 @@ exports.signup = async (req, res, next) => {
         });
       }
     }
-
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
-
-    res.status(201).json({
-      status: "success",
-      token,
-      data: {
-        user: newUser,
-      },
-    });
+    createSendToken(newUser, 201, res)
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -98,14 +97,7 @@ exports.login = async (req, res, next) => {
       });
       return;
     }
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
-    res.status(200).json({
-      status: "success",
-      token,
-    });
+    createSendToken(user, 200, res)
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -121,10 +113,13 @@ exports.protect = async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
+    console.log("we actually have a token")
     token = req.headers.authorization.split(" ")[1];
+    console.log(token)
   }
 
   if (!token) {
+    console.log("we do not have a token")
     return next(
       res.status(400).json({
         status: "fail",
@@ -137,11 +132,12 @@ exports.protect = async (req, res, next) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   // const decoded = await jwt.verify(token, process.env.JWT_SECRET);
   console.log(decoded);
-  next();
+  console.log("We have it all decoded")
 
   // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
+    console.log("This user doesn't exist so we cannot move on")
     return next(
       res.status(401).json({
         status: "fail",
@@ -152,6 +148,7 @@ exports.protect = async (req, res, next) => {
 
   // 4) Check if user changed password after the token was issued
   if (currentUser.changedPasswordAfter(decoded.iat)) {
+    console.log("The user changed password so we are fucked")
     return next(
       res.status(401).json({
         status: "fail",
@@ -161,6 +158,7 @@ exports.protect = async (req, res, next) => {
   }
 
   // GRANT ACCESS TO PROTECTED ROUTE
+  console.log("if we are here, then we are fucking good, so what?")
   req.user = currentUser;
   next();
 };
@@ -273,3 +271,48 @@ exports.resetPassword = async (req, res, next) => {
     });
   }
 };
+
+exports.updatePassword = async (req, res, next) =>{
+  const user = await User.findOne({ email: req.params.email });
+  if (!user) {
+    return next(
+      res.status(404).json({
+        status: "fail",
+        message: "There is no user with email address.",
+      })
+    );
+  }
+
+    // 2) If token has not expired, and there is user, set the new password
+    if (!user) {
+      return next(
+        res.status(400).json({
+          status: "fail",
+          message: "This user does not exist",
+        })
+      );
+    }
+  console.log(user)
+
+  const checkPassword = await user.correctPassword(req.body.passwordCurrent, user.password)
+  if (!checkPassword){
+    return next(
+      res.status(401).json({
+        status: "fail",
+        message: "Y0u entered the wrong password"
+      })
+    )
+  }
+  user.password = req.body.password
+  user.passwordConfirm = req.body.passwordConfirm
+  user.save()
+  try{
+    createSendToken(user, 200, res)
+  } catch(err){
+    res.status(400).json({
+      status: "fail",
+      message: err,
+    });
+  }
+
+}

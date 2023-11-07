@@ -1,17 +1,18 @@
 const express = require("express");
 const cartController = require("./../controllers/cartController");
+const authController = require("./../controllers/authController")
 
 const router = express.Router();
 
 router
   .route("/")
-  .get(cartController.getAllCarts)
-  .post(cartController.createCart);
+  .get(authController.protect, authController.restrictTo('admin', 'owner'), cartController.getAllCarts)
+  .post(authController.protect, cartController.createCart);
 
 router
   .route("/:product")
-  .get(cartController.getCart)
-  .patch(cartController.updateCart)
-  .delete(cartController.deleteCart);
+  .get(authController.protect, cartController.getCart)
+  .patch(authController.protect, cartController.updateCart)
+  .delete(authController.protect, cartController.deleteCart);
 
 module.exports = router;
