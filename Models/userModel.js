@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema(
         "A user's name must have more or equal then 10 characters",
       ],
     },
+    googleID: {
+      type: String,
+      unique: true,
+    },
     email: {
       type: String,
       // required: [true, "Please provide your email"],
@@ -42,7 +46,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       lowercase: true,
-      required: [true, "Please provide your phoneNumber"],
+      // required: [true, "Please provide your phoneNumber"],
       validate: [
         validator.isMobilePhone,
         "Please provide a valid phone number",

@@ -20,17 +20,18 @@ router.get('/auth/google',
 );
 
 
-// router
-//   .route("/")
-//   .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
-//   .post(authController.protect, authController.restrictTo('admin', 'owner'), userController.createUser);
+router
+  .route("/")
+  // .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
+  .get(authController.protect, userController.getAllUsers)
+  .post(authController.protect, authController.restrictTo('admin', 'owner'), userController.createUser);
 
-// router
-//   .route("/:user")
-//   .get(authController.protect, authController.restrictTo('admin', 'owner'),  userController.getUser)
-//   .patch(authController.protect,  userController.updateUser)
-//   .patch(authController.protect,  userController.deleteMe)
-//   .patch(authController.protect,  userController.updateMe)
-//   .delete(authController.protect, authController.restrictTo('admin', 'owner'), userController.deleteUser);
+router
+  .route("/:user")
+  .get(authController.protect, authController.restrictTo('admin', 'owner'),  userController.getUser)
+  .patch(authController.protect,  userController.updateUser)
+  .patch(authController.protect,  userController.deleteMe)
+  .patch(authController.protect,  userController.updateMe)
+  .delete(authController.protect, authController.restrictTo('admin', 'owner'), userController.deleteUser);
 
 module.exports = router;

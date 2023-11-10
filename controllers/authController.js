@@ -1,40 +1,40 @@
-const crypto = require('crypto');
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const User = require("./../Models/userModel");
 const { promisify } = require("util");
 const sendEmail = require("./../utils/email");
 
-
-const signToken = id => {
+const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
+    expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
 
-const createSendToken = (user, statusCode, res) => {
-  console.log('here')
+exports.createSendToken = (user, statusCode, res) => {
+  console.log("here");
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
-    httpOnly: true
+    httpOnly: true,
   };
-  console.log('here2')
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  console.log("here2");
+  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
 
-  res.cookie('jwt', token, cookieOptions);
+  res.cookie("jwt", token, cookieOptions);
 
   // Remove password from output
   user.password = undefined;
   // console.log('here2')
   res.status(statusCode).json({
-    status: 'success',
+    status: "success",
     token,
     data: {
-      user
-    }
+      user,
+    },
   });
+  return token
 };
 
 exports.signup = async (req, res, next) => {
@@ -65,7 +65,7 @@ exports.signup = async (req, res, next) => {
         });
       }
     }
-    createSendToken(newUser, 201, res)
+    exports.createSendToken(newUser, 201, res);
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -97,7 +97,7 @@ exports.login = async (req, res, next) => {
       });
       return;
     }
-    createSendToken(user, 200, res)
+    createSendToken(user, 200, res);
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -107,6 +107,7 @@ exports.login = async (req, res, next) => {
 };
 
 exports.protect = async (req, res, next) => {
+
   // 1) Getting token and check of it's there
   let token;
   if (
@@ -227,17 +228,16 @@ exports.forgotPassword = async (req, res, next) => {
 };
 
 exports.resetPassword = async (req, res, next) => {
-  try{
-
+  try {
     // 1) Get user based on the token
     const hashedToken = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(req.params.token)
-      .digest('hex');
+      .digest("hex");
 
     const user = await User.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() }
+      passwordResetExpires: { $gt: Date.now() },
     });
 
     // 2) If token has not expired, and there is user, set the new password
@@ -258,21 +258,21 @@ exports.resetPassword = async (req, res, next) => {
     // 3) Update changedPasswordAt property for the user
     // 4) Log the user in, send JWT
     res.status(200).json({
-      status: 'success',
+      status: "success",
       token,
       data: {
-        user
-      }
+        user,
+      },
     });
-  } catch(err) {
+  } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: 'shit failed'
+      status: "fail",
+      message: "shit failed",
     });
   }
 };
 
-exports.updatePassword = async (req, res, next) =>{
+exports.updatePassword = async (req, res, next) => {
   const user = await User.findOne({ email: req.params.email });
   if (!user) {
     return next(
@@ -283,36 +283,38 @@ exports.updatePassword = async (req, res, next) =>{
     );
   }
 
-    // 2) If token has not expired, and there is user, set the new password
-    if (!user) {
-      return next(
-        res.status(400).json({
-          status: "fail",
-          message: "This user does not exist",
-        })
-      );
-    }
-  console.log(user)
+  // 2) If token has not expired, and there is user, set the new password
+  if (!user) {
+    return next(
+      res.status(400).json({
+        status: "fail",
+        message: "This user does not exist",
+      })
+    );
+  }
+  console.log(user);
 
-  const checkPassword = await user.correctPassword(req.body.passwordCurrent, user.password)
-  if (!checkPassword){
+  const checkPassword = await user.correctPassword(
+    req.body.passwordCurrent,
+    user.password
+  );
+  if (!checkPassword) {
     return next(
       res.status(401).json({
         status: "fail",
-        message: "Y0u entered the wrong password"
+        message: "Y0u entered the wrong password",
       })
-    )
+    );
   }
-  user.password = req.body.password
-  user.passwordConfirm = req.body.passwordConfirm
-  user.save()
-  try{
-    createSendToken(user, 200, res)
-  } catch(err){
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.save();
+  try {
+    createSendToken(user, 200, res);
+  } catch (err) {
     res.status(400).json({
       status: "fail",
       message: err,
     });
   }
-
-}
+};
