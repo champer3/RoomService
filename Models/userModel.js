@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    facebookID: {
+      type: String,
+      unique: true,
+    },
     email: {
       type: String,
       // required: [true, "Please provide your email"],
