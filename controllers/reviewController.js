@@ -20,7 +20,32 @@ exports.getAllReviews = async (req, res) => {
 
 exports.createReview = async (req, res) => {
   try {
-    const review = await Review.create(req.body);
+    const userID = req.user.id;
+    const productID = req.body.productID;
+    if (!req.user) {
+      return res.status(400).json({
+        status: "fail",
+        message: "You have to be loggedIn to make a review",
+      });
+    }
+    if (!req.user.order.includes(productID)) {
+      return res.status(400).json({
+        status: "fail",
+        message:
+          "You are trying to write a review for a product you have not purchased",
+      });
+    }
+
+    const existingReview = await Review.findOne({ userID, productID });
+
+    if (existingReview) {
+      return res.status(400).json({
+        status: "fail",
+        message: "You have already provided a review for this product.",
+      });
+    }
+
+    const review = await Review.create({ ...req.body, userID: req.user.id });
 
     res.status(201).json({
       status: "success",
@@ -38,7 +63,7 @@ exports.createReview = async (req, res) => {
 
 exports.getReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.product);
+    const review = await Review.findById(req.params.review);
     res.status(200).json({
       status: "success",
       data: {
@@ -55,7 +80,8 @@ exports.getReview = async (req, res) => {
 
 exports.getUserReview = async (req, res) => {
   try {
-    const userReviews = await Review.find({userID: req.params.userReviews});
+    console.log("called this controller");
+    const userReviews = await Review.find({ userID: req.params.userReviews });
     res.status(200).json({
       status: "success",
       results: userReviews.length,
@@ -73,7 +99,7 @@ exports.getUserReview = async (req, res) => {
 
 exports.deleteReview = async (req, res) => {
   try {
-    await Review.findByIdAndDelete(req.params.product);
+    await Review.findByIdAndDelete(req.params.review);
 
     res.status(204).json({
       status: "success",
@@ -90,7 +116,7 @@ exports.deleteReview = async (req, res) => {
 exports.updateReview = async (req, res) => {
   try {
     const review = await Review.findByIdAndUpdate(
-      req.params.product,
+      req.params.review,
       req.body,
       {
         new: true,

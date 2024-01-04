@@ -2,7 +2,11 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const User = require("./../Models/userModel");
 const { promisify } = require("util");
-const sendEmail = require("./../utils/email");
+const Email = require("./../utils/email");
+
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000);
+}
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -11,6 +15,7 @@ const signToken = (id) => {
 };
 
 exports.createSendToken = (user, statusCode, res) => {
+  console.log("we got here");
   console.log("here");
   const token = signToken(user._id);
   const cookieOptions = {
@@ -34,37 +39,22 @@ exports.createSendToken = (user, statusCode, res) => {
       user,
     },
   });
-  return token
+  return token;
 };
 
 exports.signup = async (req, res, next) => {
   try {
     let newUser;
-    if (req.body.password && req.body.email) {
-      newUser = await User.create({
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
-        phoneNumber: req.body.phoneNumber,
-        password: req.body.password,
-        passwordConfirm: req.body.passwordConfirm,
-      });
-    } else {
-      if (req.body.email) {
-        newUser = await User.create({
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          email: req.body.email,
-          phoneNumber: req.body.phoneNumber,
-        });
-      } else {
-        newUser = await User.create({
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          phoneNumber: req.body.phoneNumber,
-        });
-      }
-    }
+    newUser = await User.create({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phoneNumber: req.body.phoneNumber,
+      password: req.body.password,
+      passwordConfirm: req.body.passwordConfirm,
+    });
+    const url = "noironmain.com";
+    await new Email(newUser, url).sendWelcome();
     exports.createSendToken(newUser, 201, res);
   } catch (err) {
     res.status(400).json({
@@ -79,13 +69,14 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({
+      return res.status(400).json({
         status: "fail",
-        message: "Yu have not provided either the email or the password",
+        message: "Yu have not provided either email address or password",
       });
-      return;
     }
+
     const user = await User.findOne({ email });
+    console.log(user);
     const correct = await user.correctPassword(password, user.password);
     console.log(password, user.password);
     console.log(correct);
@@ -97,7 +88,61 @@ exports.login = async (req, res, next) => {
       });
       return;
     }
-    createSendToken(user, 200, res);
+
+    exports.createSendToken(user, 200, res);
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+
+exports.loginEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      const newUser = await User.create({
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+        phoneNumber: req.body.phoneNumber,
+        googleID: req.body.googleID,
+        facebookID: req.body.facebookID,
+      });
+      exports.createSendToken(newUser, 201, res);
+      return;
+    }
+    console.log(user)
+    if (user.googleID) {
+      console.log("Did we get here")
+      if (req.body.googleID === user.googleID) {
+        return exports.createSendToken(user, 201, res);
+      } else {
+        return res.status(400).json({
+          status: "fail",
+          message: "login with your email again",
+        });
+      }
+    }
+    if (user.facebookID) {
+      if (req.body.facebookID === user.facebookID) {
+        return exports.createSendToken(user, 201, res);
+      } else {
+        return res.status(400).json({
+          status: "fail",
+          message: "login with your email again",
+        });
+      }
+    }
+
+    return res.status(400).json({
+      status: "fail",
+      message: "Login with your email again or use a different route",
+    });
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -107,73 +152,85 @@ exports.login = async (req, res, next) => {
 };
 
 exports.protect = async (req, res, next) => {
-
   // 1) Getting token and check of it's there
   let token;
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
-    console.log("we actually have a token")
+    console.log("we actually have a token");
     token = req.headers.authorization.split(" ")[1];
-    console.log(token)
+    console.log(token);
   }
 
   if (!token) {
-    console.log("we do not have a token")
-    return next(
-      res.status(400).json({
+    console.log("we do not have a token");
+    return res.status(400).json({
         status: "fail",
         message: "The token is wrong",
       })
-    );
   }
 
   // 2) Verification token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  console.log(process.env.JWT_SECRET);
+  let decoded;
+  try {
+    decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  } catch (error) {
+    if (error.message === "jwt expired") {
+      console.log("Token expired");
+      return res.status(400).json({
+        status: "fail",
+        message: "The token is wrong",
+      });
+    } else {
+      // Handle other JWT verification errors
+      console.log("Token probably diesn't exist");
+      return res.status(400).json({
+        status: "fail",
+        message: "The token is wrong",
+      });
+    }
+  }
   // const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-  console.log(decoded);
-  console.log("We have it all decoded")
+  console.log("hdiddjddkkkkmjnakdkm");
+  // console.log(decoded);
+  console.log("We have it all decoded");
 
   // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
+  console.log(currentUser);
   if (!currentUser) {
-    console.log("This user doesn't exist so we cannot move on")
-    return next(
-      res.status(401).json({
-        status: "fail",
-        message: "This user does not exist",
-      })
-    );
+    console.log("This user doesn't exist so we cannot move on");
+    return res.status(401).json({
+      status: "fail",
+      message: "This user does not exist",
+    });
   }
 
   // 4) Check if user changed password after the token was issued
   if (currentUser.changedPasswordAfter(decoded.iat)) {
-    console.log("The user changed password so we are fucked")
-    return next(
-      res.status(401).json({
+    console.log("The user changed password so we are fucked");
+    return res.status(401).json({
         status: "fail",
         message: "User recently changed password! Please login again",
       })
-    );
   }
 
   // GRANT ACCESS TO PROTECTED ROUTE
-  console.log("if we are here, then we are fucking good, so what?")
+  console.log("if we are here, then we are fucking good, so what?");
   req.user = currentUser;
   next();
 };
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
-    // roles ['admin', 'lead-guide']. role='user'
+    // roles ['admin', 'lead-guide']
     if (!roles.includes(req.user.role)) {
-      return next(
-        res.status(403).json({
-          status: "fail",
-          message: "You do not have permission to perform this action",
-        })
-      );
+      return res.status(403).json({
+        status: "fail",
+        message: "You do not have permission to perform this action",
+      });
     }
 
     next();
@@ -184,18 +241,19 @@ exports.forgotPassword = async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
-    return next(
-      res.status(404).json({
+    return res.status(404).json({
         status: "fail",
         message: "There is no user with email address.",
       })
-    );
   }
 
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
   // 3) Send it to user's email
+  const verificationCode = generateVerificationCode();
+  console.log("Verification Code:", verificationCode);
+
   const resetURL = `${req.protocol}://${req.get(
     "host"
   )}/api/v1/users/resetPassword/${resetToken}`;
@@ -203,11 +261,12 @@ exports.forgotPassword = async (req, res, next) => {
   const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
   try {
-    await sendEmail({
-      email: user.email,
-      subject: "Your password reset token (valid for 10 min)",
-      message,
-    });
+    // await sendEmail({
+    //   email: user.email,
+    //   subject: "Your password reset token (valid for 10 min)",
+    //   message,
+    // });
+    await new Email(user, resetToken).sendPasswordReset();
 
     res.status(200).json({
       status: "success",
@@ -218,48 +277,49 @@ exports.forgotPassword = async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    return next(
-      res.status(500).json({
+    return res.status(500).json({
         status: "fail",
         message: "There was an error sending the email. Try again later!",
       })
-    );
   }
 };
 
 exports.resetPassword = async (req, res, next) => {
   try {
     // 1) Get user based on the token
+
     const hashedToken = crypto
       .createHash("sha256")
       .update(req.params.token)
       .digest("hex");
 
+    console.log("we got hashed");
+    console.log(hashedToken);
     const user = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
     });
-
+    console.log(user);
     // 2) If token has not expired, and there is user, set the new password
     if (!user) {
-      return next(
-        res.status(400).json({
+      return res.status(400).json({
           status: "fail",
           message: "Token is invalid or has expired",
         })
-      );
     }
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
+    console.log("About to save");
     await user.save();
+    console.log("we got to save");
 
     // 3) Update changedPasswordAt property for the user
     // 4) Log the user in, send JWT
     res.status(200).json({
       status: "success",
-      token,
+      // token,
       data: {
         user,
       },
@@ -275,22 +335,18 @@ exports.resetPassword = async (req, res, next) => {
 exports.updatePassword = async (req, res, next) => {
   const user = await User.findOne({ email: req.params.email });
   if (!user) {
-    return next(
-      res.status(404).json({
+    return res.status(404).json({
         status: "fail",
         message: "There is no user with email address.",
       })
-    );
   }
 
   // 2) If token has not expired, and there is user, set the new password
   if (!user) {
-    return next(
-      res.status(400).json({
+    return res.status(400).json({
         status: "fail",
         message: "This user does not exist",
       })
-    );
   }
   console.log(user);
 
@@ -299,12 +355,10 @@ exports.updatePassword = async (req, res, next) => {
     user.password
   );
   if (!checkPassword) {
-    return next(
-      res.status(401).json({
+    return res.status(401).json({
         status: "fail",
         message: "Y0u entered the wrong password",
       })
-    );
   }
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;

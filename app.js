@@ -155,29 +155,29 @@ app.get("/logout", (req, res) => {
 
 // Trying twillo out
 
-app.get("/getCode", (req, res) => {
-  const client = require("twilio")(
-    process.env.TWILIO_ACCOUNTSID,
-    process.env.TWILIO_AUTHTOKEN
-  );
-  client.verify.v2
-    .services(process.env.TWILIO_SERVICE)
-    .verifications.create({ to: process.env.MY_NUMBER, channel: "sms" })
-    .then((verification) => console.log(verification));
-});
+// app.get("/getCode", (req, res) => {
+//   const client = require("twilio")(
+//     process.env.TWILIO_ACCOUNTSID,
+//     process.env.TWILIO_AUTHTOKEN
+//   );
+//   client.verify.v2
+//     .services(process.env.TWILIO_SERVICE)
+//     .verifications.create({ to: process.env.MY_NUMBER, channel: "sms" })
+//     .then((verification) => console.log(verification));
+// });
 
-app.get("verifyPhone", (req, res) => {
-  client.verify.v2
-    .services(process.env.TWILIO_SERVICE)
-    .verificationChecks.create({ to: process.env.MY_NUMBER, code: 677993 })
-    .then((verificationCheck) => {
-      if (verificationCheck.status === "approved") {
-        console.log("Verification successful!");
-      } else {
-        console.log("Verification failed.");
-      }
-    });
-});
+// app.get("verifyPhone", (req, res) => {
+//   client.verify.v2
+//     .services(process.env.TWILIO_SERVICE)
+//     .verificationChecks.create({ to: process.env.MY_NUMBER, code: 677993 })
+//     .then((verificationCheck) => {
+//       if (verificationCheck.status === "approved") {
+//         console.log("Verification successful!");
+//       } else {
+//         console.log("Verification failed.");
+//       }
+//     });
+// });
 
 //..........................................................................................
 

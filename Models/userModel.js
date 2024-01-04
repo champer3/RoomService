@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      // required: [true, "Please provide your email"],
+      required: [true, "Please provide your email"],
       unique: true,
       lowercase: true,
       validate: [validator.isEmail, "Please provide a valid email"],
@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       lowercase: true,
-      // required: [true, "Please provide your phoneNumber"],
+      required: [true, "Please provide your phoneNumber"],
       validate: [
         validator.isMobilePhone,
         "Please provide a valid phone number",
@@ -158,7 +158,11 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 };
 
 userSchema.methods.createPasswordResetToken = function() {
-  const resetToken = crypto.randomBytes(32).toString('hex');
+  function generateVerificationCode() {
+    return Math.floor(100000 + Math.random() * 900000);
+  }
+  // const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetToken = generateVerificationCode().toString();
 
   this.passwordResetToken = crypto
     .createHash('sha256')
