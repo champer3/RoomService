@@ -37,14 +37,14 @@
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.7",
     "nodemon": "^3.0.1",
+    "parcel": "^2.12.0",
     "peberminta": "^0.9.0",
     "socket.io": "^4.7.5",
     "stripe": "^14.13.0",
     "telesignenterprisesdk": "file:telesign_sdks/node_telesign_enterprise",
     "validator": "^13.11.0",
     "ws": "^8.16.0",
-    "xss-clean": "^0.1.4",
-    "parcel-bundler": "^0.0.0"
+    "xss-clean": "^0.1.4"
   },
   "engines": {
     "node": "^21.0.0"
