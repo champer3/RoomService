@@ -82,6 +82,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    customerID: {
+      type: String,
+      default: null
+    },
     photo: {
       type: String,
       default: "An image based on the users name",
@@ -140,7 +144,6 @@ userSchema.pre(/^find/, function(next) {
 });
 
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
-  console.log(candidatePassword, userPassword)
   return await bcrypt.compare(candidatePassword, userPassword)
 }
 
@@ -169,7 +172,6 @@ userSchema.methods.createPasswordResetToken = function() {
     .update(resetToken)
     .digest('hex');
 
-  console.log({ resetToken }, this.passwordResetToken);
 
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 

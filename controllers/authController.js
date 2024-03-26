@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const User = require("./../Models/userModel");
 const { promisify } = require("util");
-const Email = require("./../utils/email");
+// const Email = require("./../utils/email");
 
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000);
@@ -15,8 +15,6 @@ const signToken = (id) => {
 };
 
 exports.createSendToken = (user, statusCode, res) => {
-  console.log("we got here");
-  console.log("here");
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
@@ -24,14 +22,12 @@ exports.createSendToken = (user, statusCode, res) => {
     ),
     httpOnly: true,
   };
-  console.log("here2");
   if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
 
   res.cookie("jwt", token, cookieOptions);
 
   // Remove password from output
   user.password = undefined;
-  // console.log('here2')
   res.status(statusCode).json({
     status: "success",
     token,
@@ -54,7 +50,7 @@ exports.signup = async (req, res, next) => {
       passwordConfirm: req.body.passwordConfirm,
     });
     const url = "noironmain.com";
-    await new Email(newUser, url).sendWelcome();
+    // await new Email(newUser, url).sendWelcome();
     exports.createSendToken(newUser, 201, res);
   } catch (err) {
     res.status(400).json({
@@ -76,10 +72,7 @@ exports.login = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email });
-    console.log(user);
     const correct = await user.correctPassword(password, user.password);
-    console.log(password, user.password);
-    console.log(correct);
 
     if (!user || !correct) {
       res.status(401).json({
@@ -116,9 +109,7 @@ exports.loginEmail = async (req, res, next) => {
       exports.createSendToken(newUser, 201, res);
       return;
     }
-    console.log(user)
     if (user.googleID) {
-      console.log("Did we get here")
       if (req.body.googleID === user.googleID) {
         return exports.createSendToken(user, 201, res);
       } else {
@@ -151,6 +142,35 @@ exports.loginEmail = async (req, res, next) => {
   }
 };
 
+exports.loginNumber = async (req, res, next) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    const user = await User.findOne({ phoneNumber });
+
+    if (!user) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Login with your email again or use a different route",
+      });
+    }
+
+    // return res.status(200).json({
+    //   status: "success",
+    //   message: "you have a user",
+    //   data: {
+    //     user
+    //   }
+    // });
+    exports.createSendToken(user, 200, res);
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+
 exports.protect = async (req, res, next) => {
   // 1) Getting token and check of it's there
   let token;
@@ -158,13 +178,10 @@ exports.protect = async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
-    console.log("we actually have a token");
     token = req.headers.authorization.split(" ")[1];
-    console.log(token);
   }
 
   if (!token) {
-    console.log("we do not have a token");
     return res.status(400).json({
         status: "fail",
         message: "The token is wrong",
@@ -172,20 +189,19 @@ exports.protect = async (req, res, next) => {
   }
 
   // 2) Verification token
-  console.log(process.env.JWT_SECRET);
+  // console.log(process.env.JWT_SECRET);
   let decoded;
   try {
     decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   } catch (error) {
     if (error.message === "jwt expired") {
-      console.log("Token expired");
+      // console.log("Token expired");
       return res.status(400).json({
         status: "fail",
         message: "The token is wrong",
       });
     } else {
       // Handle other JWT verification errors
-      console.log("Token probably diesn't exist");
       return res.status(400).json({
         status: "fail",
         message: "The token is wrong",
@@ -193,15 +209,15 @@ exports.protect = async (req, res, next) => {
     }
   }
   // const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-  console.log("hdiddjddkkkkmjnakdkm");
+  // console.log("hdiddjddkkkkmjnakdkm");
   // console.log(decoded);
-  console.log("We have it all decoded");
+  // console.log("We have it all decoded");
 
   // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
-  console.log(currentUser);
+  // console.log(currentUser);
   if (!currentUser) {
-    console.log("This user doesn't exist so we cannot move on");
+    // console.log("This user doesn't exist so we cannot move on");
     return res.status(401).json({
       status: "fail",
       message: "This user does not exist",
@@ -210,7 +226,7 @@ exports.protect = async (req, res, next) => {
 
   // 4) Check if user changed password after the token was issued
   if (currentUser.changedPasswordAfter(decoded.iat)) {
-    console.log("The user changed password so we are fucked");
+    // console.log("The user changed password so we are fucked");
     return res.status(401).json({
         status: "fail",
         message: "User recently changed password! Please login again",
@@ -218,7 +234,7 @@ exports.protect = async (req, res, next) => {
   }
 
   // GRANT ACCESS TO PROTECTED ROUTE
-  console.log("if we are here, then we are fucking good, so what?");
+  // console.log("if we are here, then we are fucking good, so what?");
   req.user = currentUser;
   next();
 };
@@ -266,7 +282,7 @@ exports.forgotPassword = async (req, res, next) => {
     //   subject: "Your password reset token (valid for 10 min)",
     //   message,
     // });
-    await new Email(user, resetToken).sendPasswordReset();
+    // await new Email(user, resetToken).sendPasswordReset();
 
     res.status(200).json({
       status: "success",
@@ -293,13 +309,10 @@ exports.resetPassword = async (req, res, next) => {
       .update(req.params.token)
       .digest("hex");
 
-    console.log("we got hashed");
-    console.log(hashedToken);
     const user = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
     });
-    console.log(user);
     // 2) If token has not expired, and there is user, set the new password
     if (!user) {
       return res.status(400).json({
@@ -311,9 +324,7 @@ exports.resetPassword = async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
-    console.log("About to save");
     await user.save();
-    console.log("we got to save");
 
     // 3) Update changedPasswordAt property for the user
     // 4) Log the user in, send JWT
@@ -348,7 +359,6 @@ exports.updatePassword = async (req, res, next) => {
         message: "This user does not exist",
       })
   }
-  console.log(user);
 
   const checkPassword = await user.correctPassword(
     req.body.passwordCurrent,

@@ -2,3 +2,4 @@
 node_modules/
 # Ignore config.env file because it contains sensitive information
 *.env
+.cache/

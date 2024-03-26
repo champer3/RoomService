@@ -43,6 +43,60 @@ exports.getUser = async (req, res) => {
   }
 };
 
+exports.checkNumber = async (req, res) => {
+  try {
+    // console.log("here")
+    const user = await User.find({phoneNumber: req.params.phoneNumber});
+    // console.log(user)
+    if(user.length === 0){
+      res.status(200).json({
+        status: "success",
+        message: "User doesn't exist",
+      });
+    } else{
+      res.status(200).json({
+        status: "success",
+        data: {
+          user,
+        },
+      });
+    }
+    return
+  } catch (err) {
+    res.status(404).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+
+exports.checkEmail = async (req, res) => {
+  try {
+    // console.log("here")
+    const user = await User.find({email: req.params.email});
+    // console.log(user)
+    if(user.length === 0){
+      res.status(200).json({
+        status: "success",
+        message: "User doesn't exist",
+      });
+    } else{
+      res.status(200).json({
+        status: "success",
+        data: {
+          user,
+        },
+      });
+    }
+    return
+  } catch (err) {
+    res.status(404).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+
 exports.createUser = async (req, res) => {
   try {
     const newUser = await User.create(req.body);
@@ -118,7 +172,6 @@ exports.deleteMe = async (req, res, next) => {
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.find({email: req.params.user});
-    console.log(user[0].id)
     await User.findByIdAndDelete(user[0].id)
 
     res.status(204).json({
@@ -140,7 +193,6 @@ exports.updateUser = async (req, res) => {
       new: true,
       runValidators: true
     });
-    console.log(updatedUser)
     // user.save()
 
     res.status(200).json({

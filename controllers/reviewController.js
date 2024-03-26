@@ -80,7 +80,6 @@ exports.getReview = async (req, res) => {
 
 exports.getUserReview = async (req, res) => {
   try {
-    console.log("called this controller");
     const userReviews = await Review.find({ userID: req.params.userReviews });
     res.status(200).json({
       status: "success",

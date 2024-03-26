@@ -18,10 +18,6 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: [true, "Provide location for the order"],
     },
-    shippingMethod: {
-      type: String,
-      default: [true, "An order must have a shipping method"],
-    },
     orderStatus: {
       type: String,
       enum: ["Ready", "Processing", "Shipped", "Delivered", "Canceled"],
@@ -32,23 +28,21 @@ const orderSchema = new mongoose.Schema(
       required: [true, "An order must have a payment method"],
     },
     fulfillmentDate: Date,
-    productID: [
-      {
-        type: mongoose.Schema.ObjectId,
-        ref: "Product",
-        required: [true, "Review must belong to a Product."],
-      },
-    ],
+    productID: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Product",
+      required: [true, "An Order must have a product."],
+    },
     userID: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
-      required: [true, "Review must belong to a user"],
+      required: [true, "An Order must belong to a user"],
     },
     createdAt: {
       type: Date,
       default: Date.now(),
       select: false,
-    }
+    },
   },
   {
     toJSON: { virtuals: true },

@@ -1,5 +1,4 @@
 const express = require("express");
-const passport = require('passport');
 const userController = require("./../controllers/userController");
 const authController = require("./../controllers/authController")
 
@@ -8,6 +7,7 @@ const router = express.Router();
 router.post('/signup', authController.signup)
 router.post('/login', authController.login)
 router.post('/loginWithEmail', authController.loginEmail)
+router.post('/loginWithNumber', authController.loginNumber)
 router.post('/forgotPassword', authController.forgotPassword)
 router.patch('/resetPassword/:token', authController.resetPassword)
 router.patch('/updatePassword/:email', authController.updatePassword)
@@ -17,7 +17,8 @@ router.patch('/updatePassword/:email', authController.updatePassword)
 router
   .route("/")
   // .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
-  .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
+  // .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
+  .get(userController.getAllUsers)
   .post(authController.protect, authController.restrictTo('admin', 'owner'), userController.createUser);
 
 router
@@ -27,5 +28,8 @@ router
   .patch(authController.protect,  userController.deleteMe)
   .patch(authController.protect,  userController.updateMe)
   .delete(authController.protect, authController.restrictTo('admin', 'owner'), userController.deleteUser);
+
+router.route("/getNumber/:phoneNumber").get(userController.checkNumber)
+router.route("/getEmail/:email").get(userController.checkEmail)
 
 module.exports = router;

@@ -25,7 +25,6 @@ exports.createCart = async (req, res) => {
     const user = await User.findById(cart.userID)
     user.cart.push(cart._id)
     user.save()
-    console.log("done")
 
     res.status(201).json({
       status: "success",
