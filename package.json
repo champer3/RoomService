@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/champer3/RoomService#readme",
   "dependencies": {
-    "api": "^6.1.1",
+    "api": "^2.6.0",
     "axios": "^1.6.1",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
@@ -38,15 +38,15 @@
     "nodemailer": "^6.9.7",
     "nodemon": "^3.0.1",
     "peberminta": "^0.9.0",
-    "pug": "^3.0.2",
     "socket.io": "^4.7.5",
     "stripe": "^14.13.0",
     "telesignenterprisesdk": "file:telesign_sdks/node_telesign_enterprise",
     "validator": "^13.11.0",
     "ws": "^8.16.0",
-    "xss-clean": "^0.1.4"
+    "xss-clean": "^0.1.4",
+    "parcel-bundler": "^0.0.0"
   },
   "engines": {
-    "node": "21.0.0"
+    "node": "^21.0.0"
   }
 }
