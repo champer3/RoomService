@@ -1,5 +1,5 @@
-const Order = require("./../Models/orderModel");
 const User = require("./../Models/userModel")
+const Order = require("./../Models/orderModel");
 
 
 exports.getAllOrders = async (req, res) => {
