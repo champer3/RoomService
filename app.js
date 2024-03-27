@@ -20,7 +20,6 @@ const cors = require("cors");
 
 dotenv.config({ path: "./config.env" });
 
-const User = require("./Models/userModel");
 const authController = require("./controllers/authController");
 
 const app = express();

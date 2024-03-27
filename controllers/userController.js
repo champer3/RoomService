@@ -46,7 +46,7 @@ exports.getUser = async (req, res) => {
 exports.checkNumber = async (req, res) => {
   try {
     // console.log("here")
-    const user = await User.find({phoneNumber: req.params.phoneNumber});
+    const user = await user.find({phoneNumber: req.params.phoneNumber});
     // console.log(user)
     if(user.length === 0){
       res.status(200).json({
