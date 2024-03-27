@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const User = require("./../Models/userModel");
+const user = require("./../Models/userModel");
 const { promisify } = require("util");
 // const Email = require("./../utils/email");
 
@@ -41,7 +41,7 @@ exports.createSendToken = (user, statusCode, res) => {
 exports.signup = async (req, res, next) => {
   try {
     let newUser;
-    newUser = await User.create({
+    newUser = await user.create({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
@@ -71,7 +71,7 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    const user = await user.findOne({ email });
     const correct = await user.correctPassword(password, user.password);
 
     if (!user || !correct) {
@@ -95,10 +95,10 @@ exports.loginEmail = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await user.findOne({ email });
 
     if (!user) {
-      const newUser = await User.create({
+      const newUser = await user.create({
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
@@ -146,7 +146,7 @@ exports.loginNumber = async (req, res, next) => {
   try {
     const { phoneNumber } = req.body;
 
-    const user = await User.findOne({ phoneNumber });
+    const user = await user.findOne({ phoneNumber });
 
     if (!user) {
       return res.status(400).json({
@@ -214,7 +214,7 @@ exports.protect = async (req, res, next) => {
   // console.log("We have it all decoded");
 
   // 3) Check if user still exists
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await user.findById(decoded.id);
   // console.log(currentUser);
   if (!currentUser) {
     // console.log("This user doesn't exist so we cannot move on");
@@ -255,7 +255,7 @@ exports.restrictTo = (...roles) => {
 
 exports.forgotPassword = async (req, res, next) => {
   // 1) Get user based on POSTed email
-  const user = await User.findOne({ email: req.body.email });
+  const user = await user.findOne({ email: req.body.email });
   if (!user) {
     return res.status(404).json({
         status: "fail",
@@ -309,7 +309,7 @@ exports.resetPassword = async (req, res, next) => {
       .update(req.params.token)
       .digest("hex");
 
-    const user = await User.findOne({
+    const user = await user.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
     });
@@ -344,7 +344,7 @@ exports.resetPassword = async (req, res, next) => {
 };
 
 exports.updatePassword = async (req, res, next) => {
-  const user = await User.findOne({ email: req.params.email });
+  const user = await user.findOne({ email: req.params.email });
   if (!user) {
     return res.status(404).json({
         status: "fail",

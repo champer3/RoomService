@@ -1,8 +1,8 @@
-const Review = require("./../Models/reviewModel");
+const review = require("./../Models/reviewModel");
 
 exports.getAllReviews = async (req, res) => {
   try {
-    const reviews = await Review.find();
+    const reviews = await review.find();
     res.status(200).json({
       status: "success",
       results: reviews.length,
@@ -36,7 +36,7 @@ exports.createReview = async (req, res) => {
       });
     }
 
-    const existingReview = await Review.findOne({ userID, productID });
+    const existingReview = await review.findOne({ userID, productID });
 
     if (existingReview) {
       return res.status(400).json({
@@ -45,7 +45,7 @@ exports.createReview = async (req, res) => {
       });
     }
 
-    const review = await Review.create({ ...req.body, userID: req.user.id });
+    const review = await review.create({ ...req.body, userID: req.user.id });
 
     res.status(201).json({
       status: "success",
@@ -63,7 +63,7 @@ exports.createReview = async (req, res) => {
 
 exports.getReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.review);
+    const review = await review.findById(req.params.review);
     res.status(200).json({
       status: "success",
       data: {
@@ -80,7 +80,7 @@ exports.getReview = async (req, res) => {
 
 exports.getUserReview = async (req, res) => {
   try {
-    const userReviews = await Review.find({ userID: req.params.userReviews });
+    const userReviews = await review.find({ userID: req.params.userReviews });
     res.status(200).json({
       status: "success",
       results: userReviews.length,
@@ -98,7 +98,7 @@ exports.getUserReview = async (req, res) => {
 
 exports.deleteReview = async (req, res) => {
   try {
-    await Review.findByIdAndDelete(req.params.review);
+    await review.findByIdAndDelete(req.params.review);
 
     res.status(204).json({
       status: "success",
@@ -114,7 +114,7 @@ exports.deleteReview = async (req, res) => {
 
 exports.updateReview = async (req, res) => {
   try {
-    const review = await Review.findByIdAndUpdate(
+    const review = await review.findByIdAndUpdate(
       req.params.review,
       req.body,
       {

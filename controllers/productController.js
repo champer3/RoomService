@@ -1,8 +1,8 @@
-const Product = require("./../Models/productModel");
+const product = require("./../Models/productModel");
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await product.find();
     res.status(200).json({
       status: "success",
       results: products.length,
@@ -20,7 +20,7 @@ exports.getAllProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const product = await product.create(req.body);
 
     res.status(201).json({
       status: "success",
@@ -38,7 +38,7 @@ exports.createProduct = async (req, res) => {
 
 exports.getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.product);
+    const product = await product.findById(req.params.product);
     res.status(200).json({
       status: "success",
       data: {
@@ -55,7 +55,7 @@ exports.getProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.product);
+    await product.findByIdAndDelete(req.params.product);
 
     res.status(204).json({
       status: "success",
@@ -71,7 +71,7 @@ exports.deleteProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
+    const product = await product.findByIdAndUpdate(
       req.params.product,
       req.body,
       {

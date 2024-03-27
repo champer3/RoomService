@@ -1,10 +1,10 @@
-const User = require("./../Models/userModel")
-const Order = require("./../Models/orderModel");
+const user = require("./../Models/userModel")
+const order = require("./../Models/orderModel");
 
 
-exports.getAllOrders = async (req, res) => {
+exports.getAllorders = async (req, res) => {
   try {
-    const orders = await Order.find();
+    const orders = await order.find();
     res.status(200).json({
       status: "success",
       results: orders.length,
@@ -22,8 +22,8 @@ exports.getAllOrders = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const order = await Order.create({...req.body, userID: req.user.id});
-    const user = await User.findById(order.userID)
+    const order = await order.create({...req.body, userID: req.user.id});
+    const user = await user.findById(order.userID)
     user.order.push(order._id)
     user.save()
 
@@ -51,7 +51,7 @@ exports.getOrder = async (req, res) => {
           "You are trying to access the orders of another user, that's fucked up bruh",
       });
     }
-    const order = await Order.findById(req.params.order);
+    const order = await order.findById(req.params.order);
     res.status(200).json({
       status: "success",
       data: {
@@ -68,7 +68,7 @@ exports.getOrder = async (req, res) => {
 
 exports.getUserOrders = async (req, res) => {
   try {
-    const order = await Order.find({userID: req.user.id});
+    const order = await order.find({userID: req.user.id});
     res.status(200).json({
       status: "success",
       data: {
@@ -85,7 +85,7 @@ exports.getUserOrders = async (req, res) => {
 
 exports.deleteOrder = async (req, res) => {
   try {
-    await Order.findByIdAndDelete(req.params.order);
+    await order.findByIdAndDelete(req.params.order);
 
     res.status(204).json({
       status: "success",
@@ -101,7 +101,7 @@ exports.deleteOrder = async (req, res) => {
 
 exports.updateOrder = async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(
+    const order = await order.findByIdAndUpdate(
       req.params.order,
       req.body,
       {
@@ -124,7 +124,7 @@ exports.updateOrder = async (req, res) => {
 
 exports.deliverOrder = async (req, res, next) => {
   try {
-    const order = await Order.findByIdAndUpdate(
+    const order = await order.findByIdAndUpdate(
       req.params.order,
       req.body,
       {

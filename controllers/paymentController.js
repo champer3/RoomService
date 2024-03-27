@@ -1,6 +1,6 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Order = require("./../Models/orderModel");
-const User = require("./../Models/userModel");
+const user = require("./../Models/userModel");
 
 exports.getCheckOutSession = async (req, res, next) => {
   try {
@@ -12,7 +12,7 @@ exports.getCheckOutSession = async (req, res, next) => {
     } else {
       customer = await stripe.customers.create();
       customer = customer.id;
-      const updatedUser = await User.findOneAndUpdate(
+      const updatedUser = await user.findOneAndUpdate(
         { _id: user._id },
         {
           $set: {
@@ -71,7 +71,7 @@ exports.getCardDetails = async (req, res, next) => {
     } else {
       customer = await stripe.customers.create();
       customer = customer.id;
-      const updatedUser = await User.findOneAndUpdate(
+      const updatedUser = await user.findOneAndUpdate(
         { _id: user._id },
         {
           $set: {
