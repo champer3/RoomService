@@ -23,9 +23,9 @@ exports.getAllOrders = async (req, res) => {
 exports.createOrder = async (req, res) => {
   try {
     const order = await order.create({...req.body, userID: req.user.id});
-    const user = await user.findById(order.userID)
-    user.order.push(order._id)
-    user.save()
+    const new_user = await user.findById(order.userID)
+    new_user.order.push(order._id)
+    new_user.save()
 
     res.status(201).json({
       status: "success",
