@@ -161,7 +161,7 @@ app.get("/getCode/", (req, res) => {
   }
 });
 
-app.get("/verifyPhone/", async (req, res) => {
+app.get("/verifyPhone/", (req, res) => {
   // try {
   const sdk = require("api")("@telesign-enterprise/v1.0#jnsb20tlu2wb12v");
   sdk.auth(customerId, apiKey);
