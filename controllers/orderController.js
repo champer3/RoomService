@@ -2,7 +2,7 @@ const user = require("./../Models/userModel")
 const order = require("./../Models/orderModel");
 
 
-exports.getAllorders = async (req, res) => {
+exports.getAllOrders = async (req, res) => {
   try {
     const orders = await order.find();
     res.status(200).json({
