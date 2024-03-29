@@ -113,12 +113,12 @@ function smsCallback(error, responseBody) {
 }
 app.get("/getCode/", (req, res) => {
   try {
-    const TelesignSDK = require("telesignenterprisesdk");
     const customerId = process.env.CUSTOMER_ID;
     const apiKey = process.env.TELESIGNAPIKEY;
-    console.log(TelesignSDK)
     console.log(customerId)
     console.log(apiKey)
+    const TelesignSDK = require("telesignenterprisesdk");
+    console.log(TelesignSDK)
     // const phoneNumber = "6292441577";
     const phoneNumber = "+16156688834";
     const verifyCode = Math.floor(Math.random() * 999999).toString();
