@@ -118,7 +118,7 @@ app.get("/getCode/", (req, res) => {
     console.log(customerId)
     console.log(apiKey)
     // const TelesignSDK = require("telesignenterprisesdk");
-    const TelesignSDK = require('./telesign_sdks/node_telesign_enterprise/src/telesign');
+    const TelesignSDK = require('./telesign_integrations/telesign');
     console.log(TelesignSDK)
     // const phoneNumber = "6292441577";
     const phoneNumber = "+16156688834";
