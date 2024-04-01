@@ -113,7 +113,9 @@ const userSchema = new mongoose.Schema(
     }],
     passwordChangedAt: Date,
     passwordResetToken: String,
-    passwordResetExpires: Date
+    passwordResetExpires: Date,
+    verifyCode: String,
+    referenceID: String
   },
   {
     toJSON: { virtuals: true },

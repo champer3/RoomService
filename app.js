@@ -17,7 +17,7 @@ const communicationRoutes = require("./routes/communicationRoutes");
 const dotenv = require("dotenv");
 const cors = require("cors");
 dotenv.config({ path: "./config.env" });
-const User = require("./Models/userModel");
+const user = require("./Models/userModel");
 const authController = require("./controllers/authController");
 const app = express();
 // Set Security HTTP Headers
@@ -106,28 +106,32 @@ app.use("/api/v1/communications", communicationRoutes);
 // });
 function smsCallback(error, responseBody) {
   if (error === null) {
+    const res = JSON.stringify(responseBody)
     console.log("\nResponse body:\n" + JSON.stringify(responseBody));
   } else {
     console.error("Unable to send SMS. Error:\n\n" + error);
   }
 }
-app.get("/getCode/", (req, res) => {
+app.get("/getCode/:number", async(req, res) => {
   try {
     const customerId = process.env.CUSTOMER_ID;
     const apiKey = process.env.TELESIGNAPIKEY;
-    console.log(customerId)
-    console.log(apiKey)
-    // const TelesignSDK = require("telesignenterprisesdk");
     const TelesignSDK = require('./telesign_integrations/telesign');
-    console.log(TelesignSDK)
-    // const phoneNumber = "6292441577";
-    const phoneNumber = "+16156688834";
+    // console.log(TelesignSDK)
+    // const phoneNumber = "+16156688834";
+    const phoneNumber = req.params.number
     const verifyCode = Math.floor(Math.random() * 999999).toString();
     const params = {
       verify_code: verifyCode,
     };
     const client = new TelesignSDK(customerId, apiKey);
     client.verify.sms(smsCallback, phoneNumber, params);
+    const getUser = await user.find({phoneNumber: req.params.number});
+    console.log(getUser)
+    await user.findByIdAndUpdate(getUser[0].id, {verifyCode}, {
+      new: true,
+      runValidators: true
+    });
     res.status(200).json({
       status: "success",
     });
@@ -141,29 +145,62 @@ app.get("/getCode/", (req, res) => {
 });
 
 
-app.get("/verifyPhone/", (req, res) => {
-  // try {
-  const sdk = require("api")("@telesign-enterprise/v1.0#jnsb20tlu2wb12v");
-  sdk.auth(customerId, apiKey);
-  sdk
-    .getVerifyStatus({
-      reference_id: "6639DEB2BE4C0A049194D7CEB5B14CE7",
-      verify_code: "916193",
-    })
-    .then(({ data }) => {
-      console.log(data);
-      res.status(200).json({
+app.get("/verifyPhone/:number/:verify_code", async (req, res) => {
+  try{
+    console.log("we are hereeeeeeeeeeeee")
+    const getUser = await user.find({phoneNumber: req.params.number});
+    console.log(getUser)
+    const code = getUser[0].verifyCode
+    if(req.params.verify_code === code){
+      await user.findByIdAndUpdate(getUser[0].id, {verifyCode: null}, {
+        new: true,
+        runValidators: true
+      });
+      return res.status(200).json({
         status: "success",
       });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(400).json({
-        status: "fail",
-        message: "just chill, I have no idea",
-        error: err.message,
-      });
+    }
+    return res.status(400).json({
+      status: "fail",
+      message: "just chill, I have no idea",
+      error: err,
     });
+
+  }catch(err){
+    res.status(400).json({
+      status: "fail",
+      message: "just chill, I have no idea",
+      error: err,
+    });
+  }
 });
+
+// app.get("/verifyPhone/:reference_id/:verify_code", (req, res) => {
+//   // try {
+//     const customerId = process.env.CUSTOMER_ID;
+//     const apiKey = process.env.TELESIGNAPIKEY;
+//   const sdk = require("api")("@telesign-enterprise/v1.0#jnsb20tlu2wb12v");
+//   // const sdk = require("./node_modules/api/src/index")("@telesign-enterprise/v1.0#jnsb20tlu2wb12v");
+//   sdk.auth(customerId, apiKey);
+//   sdk
+//     .getVerifyStatus({
+//       reference_id: req.params.reference_id,
+//       verify_code: req.params.verify_code,
+//     })
+//     .then(({ data }) => {
+//       console.log(data);
+//       res.status(200).json({
+//         status: "success",
+//       });
+//     })
+//     .catch((err) => {
+//       console.error(err);
+//       res.status(400).json({
+//         status: "fail",
+//         message: "just chill, I have no idea",
+//         error: err.message,
+//       });
+//     });
+// });
 //..........................................................................................
 module.exports = app;
