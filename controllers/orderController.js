@@ -1,4 +1,4 @@
-const user = require("./../Models/userModel")
+const userModel = require("./../Models/userModel")
 const order = require("./../Models/orderModel");
 
 
@@ -23,7 +23,7 @@ exports.getAllOrders = async (req, res) => {
 exports.createOrder = async (req, res) => {
   try {
     const order = await order.create({...req.body, userID: req.user.id});
-    const new_user = await user.findById(order.userID)
+    const new_user = await userModel.findById(order.userID)
     new_user.order.push(order._id)
     new_user.save()
 

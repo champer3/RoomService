@@ -1,5 +1,5 @@
 const cart = require("./../Models/cartModel");
-const user = require("./../Models/userModel")
+const userModel = require("./../Models/userModel")
 
 exports.getAllCarts = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ exports.getAllCarts = async (req, res) => {
 exports.createCart = async (req, res) => {
   try {
     const cart = await cart.create(req.body);
-    const user = await user.findById(cart.userID)
+    const user = await userModel.findById(cart.userID)
     user.cart.push(cart._id)
     user.save()
 
