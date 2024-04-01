@@ -69,7 +69,7 @@ const DB = process.env.DATABASE.replace(
 
 mongoose
   .connect(DB, {
-    useNewUrlParser: true,
+    // useNewUrlParser: true,
     dbName: 'RoomService'
     // useCreateIndex: true,
     // useFindAndModify: false
