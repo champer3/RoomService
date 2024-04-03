@@ -54,11 +54,11 @@ io.on('connection', (socket) => {
   });
 });
 
-app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, res) =>{
+app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, res) => {
 
-  if(req.order.userID.toString() === socketID){
-    io.to(socketID).emit('delivered', {message: "Your order has been delivered"});
-  } else{
+  if (req.order.userID.toString() === socketID) {
+    io.to(socketID).emit('delivered', { message: "Your order has been delivered" });
+  } else {
     return res.status(400).json({
       status: "fail",
       message: "This user didn't make this order"
@@ -74,9 +74,10 @@ app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, r
 const PORT1 = process.env.PORT || 3000; // For the first server
 const PORT2 = process.env.PORT2 || 5000; // For the second server
 
-server.listen(PORT2, () => {
+server.listen(PORT1, () => {
   console.log(`Server is running at http://localhost:${PORT2}`);
 });
+
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
@@ -93,8 +94,8 @@ mongoose
   })
   .then(() => console.log('DB connection successful!'));
 
-app.listen(PORT1, () => {
-  console.log(`Server is running at http://localhost:${PORT1}`);
+app.listen(PORT2, () => {
+  console.log(`Server is running at http://localhost:${PORT2}`);
 });
 
-module.exports = io
+module.exports = app
