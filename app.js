@@ -20,6 +20,9 @@ dotenv.config({ path: "./config.env" });
 const user = require("./Models/userModel");
 const authController = require("./controllers/authController");
 const app = express();
+// const http = require('http');
+// const server = http.createServer(app);
+// export const io = require('socket.io')(app)
 // Set Security HTTP Headers
 app.use(helmet());
 // Limit request from same IP address
@@ -205,3 +208,4 @@ app.get("/verifyPhone/:number/:verify_code", async (req, res) => {
 // });
 //..........................................................................................
 module.exports = app;
+// module.exports = server;
