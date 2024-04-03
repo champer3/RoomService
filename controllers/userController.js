@@ -28,11 +28,11 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getUser = async (req, res) => {
   try {
-    const user = await user.find({email: req.params.user});
+    const getUser = await user.find({email: req.params.user});
     res.status(200).json({
       status: "success",
       data: {
-        user,
+        user: getUser,
       },
     });
   } catch (err) {
@@ -45,10 +45,8 @@ exports.getUser = async (req, res) => {
 
 exports.checkNumber = async (req, res) => {
   try {
-    // console.log("here")
-    const user = await user.find({phoneNumber: req.params.phoneNumber});
-    // console.log(user)
-    if(user.length === 0){
+    const getUser = await user.find({phoneNumber: req.params.phoneNumber});
+    if(getUser.length === 0){
       res.status(200).json({
         status: "success",
         message: "User doesn't exist",
@@ -57,7 +55,7 @@ exports.checkNumber = async (req, res) => {
       res.status(200).json({
         status: "success",
         data: {
-          user,
+          user: getUser,
         },
       });
     }
@@ -72,9 +70,7 @@ exports.checkNumber = async (req, res) => {
 
 exports.checkEmail = async (req, res) => {
   try {
-    // console.log("here")
-    const user = await user.find({email: req.params.email});
-    // console.log(user)
+    const getUser = await user.find({email: req.params.email});
     if(user.length === 0){
       res.status(200).json({
         status: "success",
@@ -84,7 +80,7 @@ exports.checkEmail = async (req, res) => {
       res.status(200).json({
         status: "success",
         data: {
-          user,
+          user: getUser,
         },
       });
     }
@@ -131,8 +127,8 @@ exports.updateMe = async (req, res, next) => {
   const filteredBody = filterObj(req.body, 'name', 'email');
 
   // 3) Update user document
-  const user = await user.find({email: req.params.user});
-  const updatedUser = await user.findByIdAndUpdate(user.id, filteredBody, {
+  const getUser = await user.find({email: req.params.user});
+  const updatedUser = await user.findByIdAndUpdate(getUser.id, filteredBody, {
     new: true,
     runValidators: true
   });
@@ -154,8 +150,8 @@ exports.updateMe = async (req, res, next) => {
 
 exports.deleteMe = async (req, res, next) => {
   try{
-    const user = await user.find({email: req.params.user});
-    await user.findByIdAndUpdate(user.id, { active: false });
+    const getUser = await user.find({email: req.params.user});
+    await user.findByIdAndUpdate(getUser.id, { active: false });
 
   res.status(204).json({
     status: 'success',
@@ -171,8 +167,8 @@ exports.deleteMe = async (req, res, next) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    const user = await user.find({email: req.params.user});
-    await user.findByIdAndDelete(user[0].id)
+    const getUser = await user.find({email: req.params.user});
+    await user.findByIdAndDelete(getUser[0].id)
 
     res.status(204).json({
       status: "success",
@@ -188,8 +184,8 @@ exports.deleteUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const user = await user.find({email: req.params.user});
-    const updatedUser = await user.findByIdAndUpdate(user[0].id, req.body, {
+    const getUser = await user.find({email: req.params.user});
+    const updatedUser = await user.findByIdAndUpdate(getUser[0].id, req.body, {
       new: true,
       runValidators: true
     });

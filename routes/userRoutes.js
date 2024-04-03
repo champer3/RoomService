@@ -4,6 +4,7 @@ const authController = require("./../controllers/authController")
 
 const router = express.Router();
 
+router.get("/getNumber/:phoneNumber", userController.checkNumber)
 router.post('/signup', authController.signup)
 router.post('/login', authController.login)
 router.post('/loginWithEmail', authController.loginEmail)
@@ -29,7 +30,7 @@ router
   .patch(authController.protect,  userController.updateMe)
   .delete(authController.protect, authController.restrictTo('admin', 'owner'), userController.deleteUser);
 
-router.route("/getNumber/:phoneNumber").get(userController.checkNumber)
+
 router.route("/getEmail/:email").get(userController.checkEmail)
 
 module.exports = router;

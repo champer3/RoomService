@@ -158,6 +158,7 @@ app.get("/verifyPhone/:number/:verify_code", async (req, res) => {
       });
       return res.status(200).json({
         status: "success",
+
       });
     }
     return res.status(400).json({
