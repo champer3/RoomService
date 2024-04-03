@@ -75,7 +75,7 @@ const PORT1 = process.env.PORT || 3000; // For the first server
 const PORT2 = process.env.PORT2 || 5000; // For the second server
 
 server.listen(PORT1, () => {
-  console.log(`Server is running at http://localhost:${PORT2}`);
+  console.log(`Server is running at http://localhost:${PORT1}`);
 });
 
 
