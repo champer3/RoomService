@@ -41,8 +41,8 @@
     "peberminta": "^0.9.0",
     "socket.io": "^4.7.5",
     "stripe": "^14.13.0",
-    "telesignsdk": "^2.0.0",
     "telesignenterprisesdk": "file:telesign_sdks/node_telesign_enterprise",
+    "telesignsdk": "^2.0.0",
     "validator": "^13.11.0",
     "ws": "^8.16.0",
     "xss-clean": "^0.1.4"
