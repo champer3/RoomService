@@ -70,9 +70,11 @@ app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, r
   });
 })
 
+const PORT1 = process.env.PORT || 3000; // For the first server
+const PORT2 = process.env.PORT1 || 5000; // For the second server
 
-server.listen(process.env.PORT1, () => {
-  console.log(`Server is running at http://localhost:${process.env.PORT1}`);
+server.listen(PORT2, () => {
+  console.log(`Server is running at http://localhost:${PORT2}`);
 });
 
 const DB = process.env.DATABASE.replace(
@@ -90,8 +92,8 @@ mongoose
   })
   .then(() => console.log('DB connection successful!'));
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running at http://localhost:${process.env.PORT}`);
+app.listen(PORT1, () => {
+  console.log(`Server is running at http://localhost:${PORT1}`);
 });
 
 module.exports = io
