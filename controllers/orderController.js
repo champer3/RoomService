@@ -1,10 +1,10 @@
 const userModel = require("./../Models/userModel")
-const order = require("./../Models/orderModel");
+const orderModel = require("./../Models/orderModel");
 
 
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await order.find();
+    const orders = await orderModel.find();
     res.status(200).json({
       status: "success",
       results: orders.length,
@@ -22,7 +22,7 @@ exports.getAllOrders = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const order = await order.create({...req.body, userID: req.user.id});
+    const order = await orderModel.create({...req.body, userID: req.user.id});
     const new_user = await userModel.findById(order.userID)
     new_user.order.push(order._id)
     new_user.save()
@@ -51,7 +51,7 @@ exports.getOrder = async (req, res) => {
           "You are trying to access the orders of another user, that's fucked up bruh",
       });
     }
-    const order = await order.findById(req.params.order);
+    const order = await orderModel.findById(req.params.order);
     res.status(200).json({
       status: "success",
       data: {
@@ -68,7 +68,7 @@ exports.getOrder = async (req, res) => {
 
 exports.getUserOrders = async (req, res) => {
   try {
-    const order = await order.find({userID: req.user.id});
+    const order = await orderModel.find({userID: req.user.id});
     res.status(200).json({
       status: "success",
       data: {
@@ -85,7 +85,7 @@ exports.getUserOrders = async (req, res) => {
 
 exports.deleteOrder = async (req, res) => {
   try {
-    await order.findByIdAndDelete(req.params.order);
+    await orderModel.findByIdAndDelete(req.params.order);
 
     res.status(204).json({
       status: "success",
@@ -101,7 +101,7 @@ exports.deleteOrder = async (req, res) => {
 
 exports.updateOrder = async (req, res) => {
   try {
-    const order = await order.findByIdAndUpdate(
+    const order = await orderModel.findByIdAndUpdate(
       req.params.order,
       req.body,
       {
@@ -124,7 +124,7 @@ exports.updateOrder = async (req, res) => {
 
 exports.deliverOrder = async (req, res, next) => {
   try {
-    const order = await order.findByIdAndUpdate(
+    const order = await orderModel.findByIdAndUpdate(
       req.params.order,
       req.body,
       {

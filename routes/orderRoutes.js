@@ -8,12 +8,12 @@ const router = express.Router();
 
 router
   .route("/")
+  .post(authController.protect, orderController.createOrder)
   .get(
     authController.protect,
     authController.restrictTo("admin", "owner"),
     orderController.getAllOrders
-  )
-  .post(authController.protect, orderController.createOrder);
+  );
 
 router
   .route("/get-your-orders")
