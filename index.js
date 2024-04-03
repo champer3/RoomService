@@ -14,44 +14,44 @@ let socketID
 
 
 
-const identifyUser = (socket, next) => {
-  const token = socket.handshake.query.token;
-  console.log("Token from middleware", token)
-  if (!token) {
-    return next(new Error('Unauthorized connection'));
-  }
+// const identifyUser = (socket, next) => {
+//   const token = socket.handshake.query.token;
+//   console.log("Token from middleware", token)
+//   if (!token) {
+//     return next(new Error('Unauthorized connection'));
+//   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.userID = decoded.id;
-    socketID = decoded.id
-    next();
-  } catch (err) {
-    return next(new Error('Invalid token'));
-  }
-};
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     socket.userID = decoded.id;
+//     socketID = decoded.id
+//     next();
+//   } catch (err) {
+//     return next(new Error('Invalid token'));
+//   }
+// };
 
 // Socket.IO setup
-io.use(identifyUser);
+// io.use(identifyUser);
 
-io.on('connection', (socket) => {
-  console.log('A client connected');
-  const token = socket.handshake.query.token;
-  console.log("Received Token", token)
+// io.on('connection', (socket) => {
+//   console.log('A client connected');
+//   const token = socket.handshake.query.token;
+//   console.log("Received Token", token)
 
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
+//   socket.on('disconnect', () => {
+//     console.log('Client disconnected');
+//   });
 
-  socket.emit('update', { message: 'Now you get to know when the order is complete' })
-  socket.join(socket.userID)
+//   socket.emit('update', { message: 'Now you get to know when the order is complete' })
+//   socket.join(socket.userID)
 
-  socket.on('message', (data) => {
-    console.log('Received message:', data);
-    // Broadcast the message to all clients except the sender
-    socket.broadcast.emit('message', data);
-  });
-});
+//   socket.on('message', (data) => {
+//     console.log('Received message:', data);
+//     // Broadcast the message to all clients except the sender
+//     socket.broadcast.emit('message', data);
+//   });
+// });
 
 app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, res) =>{
 
