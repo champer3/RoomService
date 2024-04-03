@@ -72,7 +72,7 @@ app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, r
 
 
 server.listen(process.env.PORT1, () => {
-  console.log(`Server is running at http://localhost:5000`);
+  console.log(`Server is running at http://localhost:${process.env.PORT1}`);
 });
 
 const DB = process.env.DATABASE.replace(
