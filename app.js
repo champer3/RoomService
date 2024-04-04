@@ -53,88 +53,17 @@ app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/communications", communicationRoutes);
 // Phone Number verification using TWILIO
-// app.get("/getCode/:number", (req, res) => {
-//   try {
-//     const client = require("twilio")(
-//       process.env.TWILIO_ACCOUNTSID,
-//       process.env.TWILIO_AUTHTOKEN
-//     );
-//     client.verify.v2
-//       .services(process.env.TWILIO_SERVICE)
-//       .verifications.create({ to: req.params.number, channel: "sms" })
-//       .then((verification) => console.log(verification.valid));
-//     res.status(200).json({
-//       status: "success",
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       status: "fail",
-//       message: "just chill, I have no idea",
-//       error: err,
-//     });
-//   }
-// });
-// app.get("/verifyPhone/:number/:code", async (req, res) => {
-//   try {
-//     const client = require("twilio")(
-//       process.env.TWILIO_ACCOUNTSID,
-//       process.env.TWILIO_AUTHTOKEN
-//     );
-//     const verificationCheck = await client.verify.v2
-//       .services(process.env.TWILIO_SERVICE)
-//       .verificationChecks.create({
-//         to: req.params.number,
-//         code: req.params.code,
-//       });
-//     if (verificationCheck.status === "approved") {
-//       res.status(200).json({
-//         status: "success",
-//         verification: verificationCheck.status,
-//       });
-//       console.log("Verification successful!");
-//     } else {
-//       res.status(200).json({
-//         status: "fail",
-//         verification: verificationCheck.status,
-//       });
-//       console.log("Verification failed.");
-//     }
-//   } catch (err) {
-//     res.status(400).json({
-//       status: "fail",
-//       message: "just chill, I have no idea",
-//       error: err.message,
-//     });
-//   }
-// });
-function smsCallback(error, responseBody) {
-  if (error === null) {
-    const res = JSON.stringify(responseBody)
-    console.log("\nResponse body:\n" + JSON.stringify(responseBody));
-  } else {
-    console.error("Unable to send SMS. Error:\n\n" + error);
-  }
-}
-app.get("/getCode/:number", async(req, res) => {
+app.get("/getCode/:number", (req, res) => {
   try {
-    const customerId = process.env.CUSTOMER_ID;
-    const apiKey = process.env.TELESIGNAPIKEY;
-    const TelesignSDK = require('./telesign_integrations/telesign');
-    // console.log(TelesignSDK)
-    // const phoneNumber = "+16156688834";
-    const phoneNumber = req.params.number
-    const verifyCode = Math.floor(Math.random() * 999999).toString();
-    const params = {
-      verify_code: verifyCode,
-    };
-    const client = new TelesignSDK(customerId, apiKey);
-    client.verify.sms(smsCallback, phoneNumber, params);
-    const getUser = await user.find({phoneNumber: req.params.number});
-    console.log(getUser)
-    await user.findByIdAndUpdate(getUser[0].id, {verifyCode}, {
-      new: true,
-      runValidators: true
-    });
+    const client = require("twilio")(
+      process.env.TWILIO_ACCOUNTSID,
+      process.env.TWILIO_AUTHTOKEN
+    );
+    console.log(client)
+    client.verify.v2
+      .services(process.env.TWILIO_SERVICE)
+      .verifications.create({ to: req.params.number, channel: "sms" })
+      .then((verification) => console.log(verification.valid));
     res.status(200).json({
       status: "success",
     });
@@ -146,38 +75,110 @@ app.get("/getCode/:number", async(req, res) => {
     });
   }
 });
-
-
-app.get("/verifyPhone/:number/:verify_code", async (req, res) => {
-  try{
-    console.log("we are hereeeeeeeeeeeee")
-    const getUser = await user.find({phoneNumber: req.params.number});
-    console.log(getUser)
-    const code = getUser[0].verifyCode
-    if(req.params.verify_code === code){
-      await user.findByIdAndUpdate(getUser[0].id, {verifyCode: null}, {
-        new: true,
-        runValidators: true
+app.get("/verifyPhone/:number/:code", async (req, res) => {
+  try {
+    const client = require("twilio")(
+      process.env.TWILIO_ACCOUNTSID,
+      process.env.TWILIO_AUTHTOKEN
+    );
+    const verificationCheck = await client.verify.v2
+      .services(process.env.TWILIO_SERVICE)
+      .verificationChecks.create({
+        to: req.params.number,
+        code: req.params.code,
       });
-      return res.status(200).json({
+    if (verificationCheck.status === "approved") {
+      res.status(200).json({
         status: "success",
-
+        verification: verificationCheck.status,
       });
+      console.log("Verification successful!");
+    } else {
+      res.status(200).json({
+        status: "fail",
+        verification: verificationCheck.status,
+      });
+      console.log("Verification failed.");
     }
-    return res.status(400).json({
-      status: "fail",
-      message: "just chill, I have no idea",
-      error: err,
-    });
-
-  }catch(err){
+  } catch (err) {
     res.status(400).json({
       status: "fail",
       message: "just chill, I have no idea",
-      error: err,
+      error: err.message,
     });
   }
 });
+// function smsCallback(error, responseBody) {
+//   if (error === null) {
+//     const res = JSON.stringify(responseBody)
+//     console.log("\nResponse body:\n" + JSON.stringify(responseBody));
+//   } else {
+//     console.error("Unable to send SMS. Error:\n\n" + error);
+//   }
+// }
+// app.get("/getCode/:number", async(req, res) => {
+//   try {
+//     const customerId = process.env.CUSTOMER_ID;
+//     const apiKey = process.env.TELESIGNAPIKEY;
+//     const TelesignSDK = require('./telesign_integrations/telesign');
+//     // console.log(TelesignSDK)
+//     // const phoneNumber = "+16156688834";
+//     const phoneNumber = req.params.number
+//     const verifyCode = Math.floor(Math.random() * 999999).toString();
+//     const params = {
+//       verify_code: verifyCode,
+//     };
+//     const client = new TelesignSDK(customerId, apiKey);
+//     client.verify.sms(smsCallback, phoneNumber, params);
+//     const getUser = await user.find({phoneNumber: req.params.number});
+//     console.log(getUser)
+//     await user.findByIdAndUpdate(getUser[0].id, {verifyCode}, {
+//       new: true,
+//       runValidators: true
+//     });
+//     res.status(200).json({
+//       status: "success",
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       status: "fail",
+//       message: "just chill, I have no idea",
+//       error: err,
+//     });
+//   }
+// });
+
+
+// app.get("/verifyPhone/:number/:verify_code", async (req, res) => {
+//   try{
+//     console.log("we are hereeeeeeeeeeeee")
+//     const getUser = await user.find({phoneNumber: req.params.number});
+//     console.log(getUser)
+//     const code = getUser[0].verifyCode
+//     if(req.params.verify_code === code){
+//       await user.findByIdAndUpdate(getUser[0].id, {verifyCode: null}, {
+//         new: true,
+//         runValidators: true
+//       });
+//       return res.status(200).json({
+//         status: "success",
+
+//       });
+//     }
+//     return res.status(400).json({
+//       status: "fail",
+//       message: "just chill, I have no idea",
+//       error: err,
+//     });
+
+//   }catch(err){
+//     res.status(400).json({
+//       status: "fail",
+//       message: "just chill, I have no idea",
+//       error: err,
+//     });
+//   }
+// });
 
 // app.get("/verifyPhone/:reference_id/:verify_code", (req, res) => {
 //   // try {
