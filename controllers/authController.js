@@ -46,8 +46,8 @@ exports.signup = async (req, res, next) => {
       lastName: req.body.lastName,
       email: req.body.email,
       phoneNumber: req.body.phoneNumber,
-      password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm,
+      // password: req.body.password,
+      // passwordConfirm: req.body.passwordConfirm,
     });
     const url = "noironmain.com";
     // await new Email(newUser, url).sendWelcome();
