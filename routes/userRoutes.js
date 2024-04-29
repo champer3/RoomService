@@ -28,7 +28,7 @@ router
   .patch(authController.protect,  userController.updateUser)
   .patch(authController.protect,  userController.deleteMe)
   .patch(authController.protect,  userController.updateMe)
-  .delete(authController.protect, authController.restrictTo('admin', 'owner'), userController.deleteUser);
+  .delete(authController.protect, userController.deleteUser);
 
 
 router.route("/getEmail/:email").get(userController.checkEmail)

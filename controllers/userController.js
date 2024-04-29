@@ -167,8 +167,11 @@ exports.deleteMe = async (req, res, next) => {
 
 exports.deleteUser = async (req, res) => {
   try {
+    console.log("ready to delete user")
     const getUser = await user.find({email: req.params.user});
-    await user.findByIdAndDelete(getUser[0].id)
+    if(getUser[0].id === req.user.id){
+      await user.findByIdAndDelete(getUser[0].id)
+    }
 
     res.status(204).json({
       status: "success",
