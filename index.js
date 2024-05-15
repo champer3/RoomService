@@ -12,7 +12,7 @@ const orderController = require("./controllers/orderController");
 
 dotenv.config({ path: './config.env' })
 
-let socketID
+let socketID = {}
 
 
 
@@ -26,7 +26,7 @@ const identifyUser = (socket, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     socket.userID = decoded.id;
-    socketID = decoded.id
+    socketID[decoded.id] = decoded.id
     next();
   } catch (err) {
     return next(new Error('Invalid token'));
@@ -43,6 +43,9 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
+    if (socket.userID && socketID[socket.userID]) {
+      delete socketID[socket.userID]; // Remove socket ID on disconnect
+    }
   });
 
   socket.emit('update', { message: 'Now you get to know when the order is complete' })
@@ -57,8 +60,9 @@ io.on('connection', (socket) => {
 
 app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, res) => {
 
-  if (req.order.userID.toString() === socketID) {
-    io.to(socketID).emit('delivered', { message: "Your order has been delivered" });
+  // if (req.order.userID.toString() === socketID) {
+  if (socketID[req.order.userID.toString()]) {
+    io.to(socketID[req.order.userID.toString()]).emit('delivered', { message: "Your order has been delivered" });
   } else {
     return res.status(400).json({
       status: "fail",
