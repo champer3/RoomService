@@ -4,7 +4,7 @@ const orderModel = require("./../Models/orderModel");
 
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find().sort({ createdAt: -1 });
+    const orders = await orderModel.find().sort({ createdAt: -1,  _id: -1  });
     res.status(200).json({
       status: "success",
       results: orders.length,
