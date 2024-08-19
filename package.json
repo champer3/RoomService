@@ -36,7 +36,7 @@
     "mongoose": "^8.2.3",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.7",
-    "nodemon": "^3.1.0",
+    "nodemon": "^3.1.4",
     "parcel": "^2.12.0",
     "peberminta": "^0.9.0",
     "socket.io": "^4.7.5",

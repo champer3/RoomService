@@ -8,6 +8,7 @@ const server = http.createServer(app);
 const io = require('socket.io')(server)
 // const io = require('socket.io')(app)
 const jwt = require("jsonwebtoken");
+const authController = require("./controllers/authController")
 const orderController = require("./controllers/orderController");
 
 dotenv.config({ path: './config.env' })
@@ -51,23 +52,19 @@ io.on('connection', (socket) => {
   socket.emit('update', { message: 'Now you get to know when the order is complete' })
   socket.join(socket.userID)
 
-  socket.on('message', (data) => {
+  socket.on('order', (data) => {
     console.log('Received message:', data);
     // Broadcast the message to all clients except the sender
     socket.broadcast.emit('message', data);
   });
 });
 
-app.patch("/api/v1/orders/deliver/:order", orderController.deliverOrder, (req, res) => {
+app.patch("/api/v1/orders/deliver/:order", authController.protect, authController.restrictTo("admin", "owner"), orderController.deliverOrder, (req, res) => {
 
-  // if (req.order.userID.toString() === socketID) {
-  if (socketID[req.order.userID.toString()]) {
+  const userID = req.order.userID.toString();
+  const userSocketID = socketID[userID];
+  if (userSocketID) {
     io.to(socketID[req.order.userID.toString()]).emit('delivered', { message: "Your order has been delivered" });
-  } else {
-    return res.status(400).json({
-      status: "fail",
-      message: "This user didn't make this order"
-    })
   }
 
   res.status(200).json({

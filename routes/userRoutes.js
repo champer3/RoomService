@@ -18,8 +18,8 @@ router.patch('/updatePassword/:email', authController.updatePassword)
 router
   .route("/")
   // .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
-  // .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
-  .get(userController.getAllUsers)
+  .get(authController.protect, authController.restrictTo('admin', 'owner'), userController.getAllUsers)
+  // .get(userController.getAllUsers)
   .post(authController.protect, authController.restrictTo('admin', 'owner'), userController.createUser);
 
 router
