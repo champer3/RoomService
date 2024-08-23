@@ -40,7 +40,7 @@ io.use(identifyUser);
 io.on('connection', (socket) => {
   console.log('A client connected');
   const token = socket.handshake.query.token;
-  console.log("Received Token", token)
+  console.log("Received Token")
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
@@ -48,14 +48,19 @@ io.on('connection', (socket) => {
       delete socketID[socket.userID]; // Remove socket ID on disconnect
     }
   });
+  // socket.join(socket.userID)
 
-  socket.emit('update', { message: 'Now you get to know when the order is complete' })
-  socket.join(socket.userID)
+  if(socket.handshake.query.role === 'admin'){
+    console.log("The client that connected is an admin")
+    socket.join('admin')
+  } else{
+    console.log('connected as a normal user')
+    socket.join(socket.userID)
+  }
 
   socket.on('order', (data) => {
     console.log('Received message:', data);
-    // Broadcast the message to all clients except the sender
-    socket.broadcast.emit('message', data);
+    socket.broadcast.emit('order', data);
   });
 });
 
