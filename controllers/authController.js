@@ -233,8 +233,8 @@ exports.protect = async (req, res, next) => {
   }
 
   // GRANT ACCESS TO PROTECTED ROUTE
-  // console.log("if we are here, then we are fucking good, so what?");
   req.user = currentUser;
+
   next();
 };
 

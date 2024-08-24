@@ -38,6 +38,7 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "An Order must belong to a user"],
     },
+    userName: String,
     createdAt: {
       type: Date,
       default: Date.now(),

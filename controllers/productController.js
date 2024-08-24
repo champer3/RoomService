@@ -19,13 +19,14 @@ exports.getAllProducts = async (req, res) => {
 };
 
 exports.createProduct = async (req, res) => {
+  console.log("did we even get here ")
   try {
-    const product = await product.create(req.body);
+    const newProduct = await product.create(req.body);
 
     res.status(201).json({
       status: "success",
       data: {
-        product,
+        product: newProduct,
       },
     });
   } catch (err) {

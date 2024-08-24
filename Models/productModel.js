@@ -1,15 +1,19 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const { options } = require('../app');
 
 const productSchema = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
       required: [true, 'A product must have a name'],
       unique: true,
       trim: true,
-      maxlength: [150, 'A tour name must have less or equal then 40 characters'],
-      minlength: [10, 'A tour name must have more or equal then 10 characters'],
+      maxlength: [150, 'A product"s name must have less or equal then 40 characters'],
+      minlength: [10, 'A product"s name must be equal or more then 10 characters'],
+    },
+    components: {
+      type: [String]
     },
     category: {
       type: String,
@@ -17,17 +21,26 @@ const productSchema = new mongoose.Schema(
     },
     Brand: {
       type: String,
-      required: [true, 'A product must always have a brand']
     },
+    extra: Boolean,
     stock: {
       type: Number,
       default: 0,
     },
-    image: {
+    instructions: Boolean,
+    nutrients: {
+      type: [String],
+      default: []
+    },
+    images: {
         type: [String],
         default: []
     },
-    tags: {
+    options: {
+        type: [String],
+        default: []
+    },
+    related: {
         type: [String],
         default: []
     },
@@ -46,19 +59,12 @@ const productSchema = new mongoose.Schema(
         type: [String],
         default: []
     },
+    oldPrice: {
+      type: Number
+    },
     price: {
       type: Number,
       required: [true, 'A tour must have a price']
-    },
-    priceDiscount: {
-      type: Number,
-      validate: {
-        validator: function(val) {
-          // this only points to current doc on NEW document creation
-          return val < this.price;
-        },
-        message: `Discount price (${this.priceDiscount}) should be below regular price`
-      }
     },
     description: {
       type: String,
@@ -72,10 +78,6 @@ const productSchema = new mongoose.Schema(
     availability: {
       type: Boolean,
       default: true
-    },
-    variants: {
-        type: [String],
-        default: []
     }
   },
   {
