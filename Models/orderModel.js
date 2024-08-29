@@ -1,5 +1,12 @@
 const mongoose = require("mongoose");
 
+const OrderDetailsSchema = new mongoose.Schema({
+  productName: { type: String },
+  flavor: { type: [String] },
+  dressing: { type: [String]},
+  sides: {type: [String]}
+});
+
 const orderSchema = new mongoose.Schema(
   {
     date: {
@@ -39,6 +46,8 @@ const orderSchema = new mongoose.Schema(
       required: [true, "An Order must belong to a user"],
     },
     userName: String,
+    orderInstruction: String,
+    orderDetails: [OrderDetailsSchema],
     createdAt: {
       type: Date,
       default: Date.now(),
