@@ -39,11 +39,11 @@ exports.createProduct = async (req, res) => {
 
 exports.getProduct = async (req, res) => {
   try {
-    const product = await product.findById(req.params.product);
+    const singleProduct = await product.findById(req.params.product);
     res.status(200).json({
       status: "success",
       data: {
-        product,
+        product: singleProduct,
       },
     });
   } catch (err) {
