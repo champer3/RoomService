@@ -72,7 +72,7 @@ exports.deleteProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await product.findByIdAndUpdate(
+    const singleProduct = await product.findByIdAndUpdate(
       req.params.product,
       req.body,
       {
@@ -83,7 +83,7 @@ exports.updateProduct = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      product,
+      product: singleProduct,
     });
   } catch (err) {
     res.status(400).json({
