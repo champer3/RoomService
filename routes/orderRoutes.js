@@ -11,7 +11,7 @@ router
   .post(authController.protect, orderController.createOrder)
   .get(
     authController.protect,
-    authController.restrictTo("admin", "owner"),
+    authController.restrictTo("admin", "owner", "driver"),
     orderController.getAllOrders
   );
 
@@ -24,7 +24,7 @@ router
   .get(authController.protect, orderController.getOrder)
   .patch(
     authController.protect,
-    authController.restrictTo("admin", "owner"),
+    authController.restrictTo("admin", "owner", "driver"),
     orderController.updateOrder
   )
   .delete(
