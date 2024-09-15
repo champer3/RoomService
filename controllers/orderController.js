@@ -44,13 +44,14 @@ exports.createOrder = async (req, res) => {
 exports.getOrder = async (req, res) => {
   try {
     const orderID = req.params.order;
-    if (!req.user.order.includes(orderID)) {
-      return res.status(400).json({
-        status: "fail",
-        message:
-          "You are trying to access the orders of another user, that's fucked up bruh",
-      });
-    }
+    // To be fixed later
+    // if (!req.user.order.includes(orderID)) {
+    //   return res.status(400).json({
+    //     status: "fail",
+    //     message:
+    //       "You are trying to access the orders of another user, that's fucked up bruh",
+    //   });
+    // }
     const order = await orderModel.findById(req.params.order);
     res.status(200).json({
       status: "success",
