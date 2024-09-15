@@ -45,7 +45,16 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "An Order must belong to a user"],
     },
+    driver: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
     userName: String,
+    proofOfDelivery: [String],
+    proofOfAge: [String],
+    dob: {
+      type: Date
+    },
     orderInstruction: String,
     orderDetails: [OrderDetailsSchema],
     createdAt: {
