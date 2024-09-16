@@ -24,7 +24,7 @@ router
 
 router
   .route("/:user")
-  .get(authController.protect, authController.restrictTo('admin', 'owner'),  userController.getUser)
+  .get(authController.protect, authController.restrictTo('admin', 'owner', 'driver'),  userController.getUser)
   .patch(authController.protect,  userController.updateUser)
   .patch(authController.protect,  userController.deleteMe)
   .patch(authController.protect,  userController.updateMe)

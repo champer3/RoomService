@@ -78,6 +78,7 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "editor", "admin", "driver"],
       default: "user",
     },
+    
     active: {
       type: Boolean,
       default: true,

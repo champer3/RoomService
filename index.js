@@ -62,6 +62,11 @@ io.on('connection', (socket) => {
     console.log('Received message:', data);
     socket.broadcast.emit('order', data);
   });
+
+  socket.on('orderInDelivery', (data) => {
+    console.log('Received OrderInDelivery message:', data);
+    socket.broadcast.emit('orderInDelivery', data);
+  });
 });
 
 app.patch("/api/v1/orders/deliver/:order", authController.protect, authController.restrictTo("admin", "owner"), orderController.deliverOrder, (req, res) => {

@@ -70,8 +70,10 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email }).select('+password');
+
     const correct = await user.correctPassword(password, user.password);
+
 
     if (!user || !correct) {
       res.status(401).json({
@@ -80,7 +82,7 @@ exports.login = async (req, res, next) => {
       });
       return;
     }
-
+    console.log("Understanding the shit going on")
     exports.createSendToken(user, 200, res);
   } catch (err) {
     res.status(400).json({
