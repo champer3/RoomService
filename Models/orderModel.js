@@ -31,16 +31,16 @@ const orderSchema = new mongoose.Schema(
       enum: ['Ordered', 'Preparing', 'Out for Delivery', 'Delivered', 'Cancelled'],
       default: "Ordered",
     },
-    paymentMothod: {
+    paymentMethod: {
       type: String,
       required: [true, "An order must have a payment method"],
     },
     fulfillmentDate: Date,
-    productID: {
+    productID: [{
       type: mongoose.Schema.ObjectId,
       ref: "Product",
       required: [true, "An Order must have a product."],
-    },
+    }],
     userID: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
