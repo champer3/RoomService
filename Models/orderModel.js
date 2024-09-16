@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const OrderDetailsSchema = new mongoose.Schema({
   productName: { type: String },
+  component: String,
   flavor: { type: [String] },
   dressing: { type: [String]},
   sides: {type: [String]}

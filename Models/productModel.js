@@ -2,6 +2,25 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const { options } = require('../app');
 
+const nutrientSchema = new mongoose.Schema({
+  name: String,
+  value: Number,
+  unit: String,
+});
+
+const valueSchema = new mongoose.Schema({
+  name: String,
+  price: Number,
+  iamge: String,
+});
+
+const optionSchema = new mongoose.Schema({
+  name: String,
+  quantity: Number,
+  required: Boolean,
+  values: [valueSchema]
+});
+
 const productSchema = new mongoose.Schema(
   {
     title: {
@@ -19,6 +38,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A product must always belong to a category']
     },
+    subCategory: String,
     Brand: {
       type: String,
     },
@@ -27,6 +47,7 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    nutrients: nutrientSchema,
     instructions: Boolean,
     nutrients: {
       type: [String],
