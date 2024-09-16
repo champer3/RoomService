@@ -25,6 +25,7 @@ exports.createOrder = async (req, res) => {
     const order = await orderModel.create({...req.body, userID: req.user.id, userName: req.user.firstName});
     const user = await userModel.findById(req.user.id)
     user.order.push(order._id)
+    user.passwordConfirm = undefined;
     user.save()
 
     res.status(201).json({
