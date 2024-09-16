@@ -4,7 +4,7 @@ const orderModel = require("./../Models/orderModel");
 
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find().sort({ createdAt: -1,  _id: -1  });
+    const orders = await orderModel.find().sort({ createdAt: -1, _id: -1 });
     res.status(200).json({
       status: "success",
       results: orders.length,
@@ -22,11 +22,11 @@ exports.getAllOrders = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const order = await orderModel.create({...req.body, userID: req.user.id, userName: req.user.firstName});
-    const user = await userModel.findById(req.user.id)
-    user.order.push(order._id)
-    user.passwordConfirm = undefined;
-    user.save()
+    const order = await orderModel.create({ ...req.body, userID: req.user.id, userName: req.user.firstName });
+    const user = await userModel.findByIdAndUpdate(req.user.id, { $push: { orders: order._id } }, { new: true, runValidators: false })
+    // user.order.push(order._id)
+    // user.passwordConfirm = undefined;
+    // user.save()
 
     res.status(201).json({
       status: "success",
@@ -70,7 +70,7 @@ exports.getOrder = async (req, res) => {
 
 exports.getUserOrders = async (req, res) => {
   try {
-    const order = await orderModel.find({userID: req.user.id});
+    const order = await orderModel.find({ userID: req.user.id });
     res.status(200).json({
       status: "success",
       data: {
