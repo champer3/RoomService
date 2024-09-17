@@ -63,10 +63,10 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('order', data);
   });
 
-  socket.on('orderInDelivery', (data) => {
-    console.log('Received OrderInDelivery message:', data);
-    socket.broadcast.emit('orderInDelivery', data);
-  });
+  // socket.on('orderInDelivery', (data) => {
+  //   console.log('Received OrderInDelivery message:', data);
+  //   socket.broadcast.emit('orderInDelivery', data);
+  // });
 });
 
 app.patch("/api/v1/orders/deliver/:order", authController.protect, authController.restrictTo("admin", "owner"), orderController.deliverOrder, (req, res) => {
@@ -74,7 +74,13 @@ app.patch("/api/v1/orders/deliver/:order", authController.protect, authControlle
   const userID = req.order.userID.toString();
   const userSocketID = socketID[userID];
   if (userSocketID) {
-    io.to(socketID[req.order.userID.toString()]).emit('delivered', { message: "Your order has been delivered" });
+    if (req.order.orderStatus === 'Delivered'){
+      console.log("THE ORDER IS NOW DELIVERED", req.order.orderStatus)
+      io.to(socketID[req.order.userID.toString()]).emit('delivered', { message: "Your order has been delivered" });
+    } else if (req.order.orderStatus ==='Out for Delivery'){
+      console.log("THE ORDER HAS BEEN SENT OUT FOR DELIVERY", req.order.orderStatus)
+      io.to(socketID[req.order.userID.toString()]).emit('orderInDelivery', { message: "Your order is out for delivery" });
+    }
   }
 
   res.status(200).json({
