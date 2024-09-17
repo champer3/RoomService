@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A product must always belong to a category']
     },
-    subCategory: String,
+    subCategory: [String],
     Brand: {
       type: String,
     },
