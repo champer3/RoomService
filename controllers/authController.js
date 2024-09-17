@@ -46,8 +46,8 @@ exports.signup = async (req, res, next) => {
       lastName: req.body.lastName,
       email: req.body.email,
       phoneNumber: req.body.phoneNumber,
-      password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm,
+      // password: req.body.password,
+      // passwordConfirm: req.body.passwordConfirm,
       role: req.body.role
     });
     const url = "noironmain.com";
