@@ -74,6 +74,7 @@ app.patch("/api/v1/orders/deliver/:order", authController.protect, authControlle
   const userID = req.order.userID.toString();
   const userSocketID = socketID[userID];
   console.log("We have a userSocketID", userSocketID)
+  console.log('req.order.orderStatus', req.order.orderStatus)
   if (userSocketID) {
     if (req.order.orderStatus === 'Delivered'){
       console.log("THE ORDER IS NOW DELIVERED", req.order.orderStatus)
@@ -82,6 +83,8 @@ app.patch("/api/v1/orders/deliver/:order", authController.protect, authControlle
       console.log("THE ORDER HAS BEEN SENT OUT FOR DELIVERY", req.order.orderStatus)
       io.to(socketID[req.order.userID.toString()]).emit('orderInDelivery', { message: "Your order is out for delivery", orderId: req.order._id.toString() });
     }
+  } else {
+    console.log('User is not connected or no socket ID found')
   }
 
   res.status(200).json({
