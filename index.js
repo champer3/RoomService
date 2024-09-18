@@ -70,7 +70,7 @@ io.on('connection', (socket) => {
 });
 
 app.patch("/api/v1/orders/deliver/:order", authController.protect, authController.restrictTo("admin", "owner", "driver"), orderController.deliverOrder, (req, res) => {
-
+  console.log("sdsjdvnskndvjnskjdnvjknskjvkjsfbvkjbjfksvbjksbfkvjbkjfbvjk")
   const userID = req.order.userID.toString();
   const userSocketID = socketID[userID];
   if (userSocketID) {
