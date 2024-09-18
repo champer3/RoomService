@@ -73,6 +73,7 @@ app.patch("/api/v1/orders/deliver/:order", authController.protect, authControlle
   console.log("sdsjdvnskndvjnskjdnvjknskjvkjsfbvkjbjfksvbjksbfkvjbkjfbvjk")
   const userID = req.order.userID.toString();
   const userSocketID = socketID[userID];
+  console.log("We have a userSocketID", userSocketID)
   if (userSocketID) {
     if (req.order.orderStatus === 'Delivered'){
       console.log("THE ORDER IS NOW DELIVERED", req.order.orderStatus)
