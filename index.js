@@ -79,7 +79,7 @@ app.patch("/api/v1/orders/deliver/:order", authController.protect, authControlle
     if (req.order.orderStatus === 'Delivered'){
       console.log("THE ORDER IS NOW DELIVERED", req.order.orderStatus)
       io.to(socketID[req.order.userID.toString()]).emit('delivered', { message: "Your order has been delivered", orderId: req.order._id.toString()});
-    } else if (req.order.orderStatus ==='Out for Delivery'){
+    } else if (req.order.orderStatus ==='Ready for Delivery'){
       console.log("THE ORDER HAS BEEN SENT OUT FOR DELIVERY", req.order.orderStatus)
       io.to(socketID[req.order.userID.toString()]).emit('orderInDelivery', { message: "Your order is out for delivery", orderId: req.order._id.toString() });
     }
