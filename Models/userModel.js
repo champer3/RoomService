@@ -91,7 +91,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "An image based on the users name",
     },
-    address: String,
+    address: [String],
     dob: {
       type: Date,
       validate: [validator.isDate, "give a valid date of birth"],
