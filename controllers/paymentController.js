@@ -29,7 +29,8 @@ exports.getCheckOutSession = async (req, res, next) => {
       { apiVersion: "2023-10-16" }
     );
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: req.body.amount * 100,
+      // amount: req.body.amount * 100,
+      amount: 100,
       customer: customer,
       setup_future_usage: "off_session",
       currency: "usd",
