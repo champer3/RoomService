@@ -46,6 +46,7 @@ exports.signup = async (req, res, next) => {
       lastName: req.body.lastName,
       email: req.body.email,
       phoneNumber: req.body.phoneNumber,
+      googleID: req.body.googleID,
       // password: req.body.password,
       // passwordConfirm: req.body.passwordConfirm,
       role: req.body.role
