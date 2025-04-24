@@ -86,6 +86,8 @@ app.get('/print-jobs/tsp100iv', (req, res) => {
       data: 'Thanks for your order!\nOrder #1234\nTotal: $25.00\n'
     }
   });
+  console.log("Print Job received")
+  res.sendStatus(200);
 });
 
 app.get("/verifyPhone/:number/:code", async (req, res) => {
