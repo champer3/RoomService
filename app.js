@@ -75,6 +75,19 @@ app.get("/getCode/:number", (req, res) => {
     });
   }
 });
+
+app.get('/print-jobs/tsp100iv', (req, res) => {
+  // Example job - plain text
+  res.json({
+    jobReady: true,
+    jobId: 'job-123',
+    job: {
+      contentType: 'text/plain',
+      data: 'Thanks for your order!\nOrder #1234\nTotal: $25.00\n'
+    }
+  });
+});
+
 app.get("/verifyPhone/:number/:code", async (req, res) => {
   try {
     const client = require("twilio")(
