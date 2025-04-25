@@ -76,7 +76,7 @@ app.get("/getCode/:number", (req, res) => {
   }
 });
 
-app.get('/print-jobs/tsp100iv', (req, res) => {
+app.post('/print-jobs/tsp100iv', (req, res) => {
   // Example job - plain text
   res.json({
     jobReady: true,
