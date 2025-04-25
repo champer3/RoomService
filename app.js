@@ -78,7 +78,7 @@ app.get("/getCode/:number", (req, res) => {
 
 app.post('/print-jobs/tsp100iv', (req, res) => {
   // Example job - plain text
-  res.json({
+  res.status(200).json({
     jobReady: true,
     jobId: 'job-123',
     job: {
@@ -87,7 +87,6 @@ app.post('/print-jobs/tsp100iv', (req, res) => {
     }
   });
   console.log("Print Job received")
-  res.sendStatus(200);
 });
 
 app.get("/verifyPhone/:number/:code", async (req, res) => {
