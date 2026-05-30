@@ -38,26 +38,97 @@ exports.createSendToken = (user, statusCode, res) => {
   return token;
 };
 
-exports.signup = async (req, res, next) => {
+// Sign up with email + password. Final step is firstName + lastName. No phone (add in profile later).
+exports.signUpWithEmail = async (req, res, next) => {
   try {
-    let newUser;
-    newUser = await userModel.create({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      phoneNumber: req.body.phoneNumber,
-      googleID: req.body.googleID,
-      // password: req.body.password,
-      // passwordConfirm: req.body.passwordConfirm,
-      role: req.body.role
+    const { email, password, passwordConfirm, firstName, lastName } = req.body;
+    if (!email || !password || !passwordConfirm || !firstName || !lastName) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Please provide email, password, passwordConfirm, firstName, and lastName",
+      });
+    }
+    if (password !== passwordConfirm) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Passwords do not match",
+      });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password must be at least 8 characters",
+      });
+    }
+
+    const existing = await userModel.findOne({ email });
+    if (existing) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Email already registered. Sign in or use a different email.",
+      });
+    }
+
+    const newUser = await userModel.create({
+      email: email.toLowerCase().trim(),
+      password,
+      passwordConfirm,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
     });
-    const url = "noironmain.com";
-    // await new Email(newUser, url).sendWelcome();
     exports.createSendToken(newUser, 201, res);
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      message: err,
+      message: err.message || err,
+    });
+  }
+};
+
+// Sign up with phone (after OTP) or complete Google/phone flow. Requires firstName + lastName (final step). Optional password or googleID.
+exports.signup = async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, phoneNumber, googleID, password, passwordConfirm, address, role } = req.body;
+    if (!firstName || !lastName) {
+      return res.status(400).json({
+        status: "fail",
+        message: "First name and last name are required to complete account creation",
+      });
+    }
+
+    const createPayload = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email && email.trim() ? email.trim().toLowerCase() : undefined,
+      phoneNumber: phoneNumber && phoneNumber.trim() ? phoneNumber.trim() : undefined,
+      googleID: googleID || undefined,
+      address: address || [],
+      role: role || "user",
+    };
+
+    if (password && passwordConfirm) {
+      if (password !== passwordConfirm) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Passwords do not match",
+        });
+      }
+      if (password.length < 8) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Password must be at least 8 characters",
+        });
+      }
+      createPayload.password = password;
+      createPayload.passwordConfirm = passwordConfirm;
+    }
+
+    const newUser = await userModel.create(createPayload);
+    exports.createSendToken(newUser, 201, res);
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err.message || err,
     });
   }
 };
@@ -68,79 +139,103 @@ exports.login = async (req, res, next) => {
     if (!email || !password) {
       return res.status(400).json({
         status: "fail",
-        message: "Yu have not provided either email address or password",
+        message: "Please provide email and password",
       });
     }
 
-    const user = await userModel.findOne({ email }).select('+password');
+    const user = await userModel.findOne({ email }).select("+password");
+    if (!user) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Invalid email or password",
+      });
+    }
+
+    // User signed up with Google — must use "Sign in with Google"
+    if (user.googleID) {
+      return res.status(401).json({
+        status: "fail",
+        message: "This account uses Google sign-in. Please sign in with Google.",
+      });
+    }
+
+    if (!user.password) {
+      return res.status(401).json({
+        status: "fail",
+        message: "This account uses Google sign-in. Please sign in with Google.",
+      });
+    }
 
     const correct = await user.correctPassword(password, user.password);
-
-
-    if (!user || !correct) {
-      res.status(401).json({
+    if (!correct) {
+      return res.status(401).json({
         status: "fail",
-        message: "Incorrect email or password",
+        message: "Invalid email or password",
       });
-      return;
     }
-    console.log("Understanding the shit going on")
+
     exports.createSendToken(user, 200, res);
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      message: err,
+      message: err.message || err,
     });
   }
 };
 
+// Login with Google (email + googleID). No password check. If user exists and googleID matches, return token. If no user, optionally create (first-time Google).
 exports.loginEmail = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, googleID } = req.body;
+    if (!email || !googleID) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Please provide email and googleID for Google sign-in",
+      });
+    }
 
     const user = await userModel.findOne({ email });
 
     if (!user) {
+      // First-time Google sign-up: create user with email + googleID (no password). Names can be added in app final step.
       const newUser = await userModel.create({
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
+        firstName: req.body.firstName || "",
+        lastName: req.body.lastName || "",
         email: req.body.email,
-        phoneNumber: req.body.phoneNumber,
         googleID: req.body.googleID,
-        facebookID: req.body.facebookID,
+        facebookID: req.body.facebookID || undefined,
       });
-      exports.createSendToken(newUser, 201, res);
-      return;
-    }
-    if (user.googleID) {
-      if (req.body.googleID === user.googleID) {
-        return exports.createSendToken(user, 201, res);
-      } else {
-        return res.status(400).json({
-          status: "fail",
-          message: "login with your email again",
-        });
-      }
-    }
-    if (user.facebookID) {
-      if (req.body.facebookID === user.facebookID) {
-        return exports.createSendToken(user, 201, res);
-      } else {
-        return res.status(400).json({
-          status: "fail",
-          message: "login with your email again",
-        });
-      }
+      return exports.createSendToken(newUser, 201, res);
     }
 
-    return res.status(400).json({
+    if (user.googleID) {
+      if (req.body.googleID === user.googleID) {
+        return exports.createSendToken(user, 200, res);
+      }
+      return res.status(401).json({
+        status: "fail",
+        message: "Invalid Google sign-in. Please try again.",
+      });
+    }
+
+    if (user.facebookID) {
+      if (req.body.facebookID === user.facebookID) {
+        return exports.createSendToken(user, 200, res);
+      }
+      return res.status(401).json({
+        status: "fail",
+        message: "Invalid Facebook sign-in. Please try again.",
+      });
+    }
+
+    return res.status(401).json({
       status: "fail",
-      message: "Login with your email again or use a different route",
+      message: "This account was created with email/password. Please sign in with email and password.",
     });
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      message: err,
+      message: err.message || err,
     });
   }
 };
@@ -379,7 +474,7 @@ exports.updatePassword = async (req, res, next) => {
   user.passwordConfirm = req.body.passwordConfirm;
   user.save();
   try {
-    createSendToken(user, 200, res);
+    exports.createSendToken(user, 200, res);
   } catch (err) {
     res.status(400).json({
       status: "fail",

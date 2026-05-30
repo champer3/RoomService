@@ -6,7 +6,12 @@
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build ./index.js"
+    "build": "parcel build ./index.js",
+    "seed:departments": "node scripts/seedDepartments.js",
+    "seed:department-fields": "node scripts/seedDepartmentFields.js",
+    "seed:categories": "node scripts/seedCategories.js",
+    "migrate:product-categories": "node scripts/migrateProductCategories.js",
+    "migrate:product-date-added": "node scripts/migrateProductDateAdded.js"
   },
   "repository": {
     "type": "git",

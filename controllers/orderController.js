@@ -1,10 +1,25 @@
-const userModel = require("./../Models/userModel")
+const userModel = require("./../Models/userModel");
 const orderModel = require("./../Models/orderModel");
+const crypto = require("crypto");
+const {
+  buildCreatePayload,
+  applyOrderPatch,
+} = require("../utils/orderNormalize");
 
+const populateOrder = [
+  {
+    path: "assignedDriverId",
+    select: "email firstName lastName photo",
+  },
+  { path: "customerId", select: "firstName lastName email" },
+];
 
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find().sort({ createdAt: -1, _id: -1 });
+    const orders = await orderModel
+      .find()
+      .sort({ placedAt: -1, createdAt: -1, _id: -1 })
+      .populate(populateOrder);
     res.status(200).json({
       status: "success",
       results: orders.length,
@@ -20,8 +35,6 @@ exports.getAllOrders = async (req, res) => {
   }
 };
 
-const crypto = require("crypto");
-
 exports.createGuestOrder = async (req, res) => {
   try {
     const { guestName, guestPhone } = req.body;
@@ -32,28 +45,43 @@ exports.createGuestOrder = async (req, res) => {
       });
     }
     const trackingToken = crypto.randomBytes(4).toString("hex");
-    const order = await orderModel.create({
-      ...req.body,
-      userID: undefined,
-      userName: req.body.guestName,
-      trackingToken,
-    });
+    let payload;
+    try {
+      payload = buildCreatePayload(req.body, {
+        customerId: null,
+        guestName,
+      });
+    } catch (e) {
+      return res.status(400).json({
+        status: "fail",
+        message: e.message || String(e),
+      });
+    }
+    payload.trackingToken = trackingToken;
+    payload.guestPhone = guestPhone;
+    const order = await orderModel.create(payload);
+    await order.populate(populateOrder);
     res.status(201).json({
       status: "success",
       data: {
         order: {
           _id: order._id,
-          orderStatus: order.orderStatus,
-          totalPrice: order.totalPrice,
+          id: order._id,
+          status: order.status,
+          orderStatus: order.status,
+          totalAmount: order.totalAmount,
+          totalPrice: order.totalAmount,
           trackingToken: order.trackingToken,
-          createdAt: order.date,
+          placedAt: order.placedAt,
+          date: order.placedAt,
+          orderNumber: order.orderNumber,
         },
       },
     });
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      message: err,
+      message: err.message || err,
     });
   }
 };
@@ -69,8 +97,10 @@ exports.getOrderTrack = async (req, res) => {
     }
     const token = req.query.trackingToken;
     const phone = req.query.phone;
-    const tokenMatch = token && order.trackingToken && order.trackingToken === token;
-    const phoneMatch = phone && order.guestPhone && order.guestPhone === phone;
+    const tokenMatch =
+      token && order.trackingToken && order.trackingToken === token;
+    const phoneMatch =
+      phone && order.guestPhone && order.guestPhone === phone;
     if (!tokenMatch && !phoneMatch) {
       return res.status(403).json({
         status: "fail",
@@ -82,11 +112,13 @@ exports.getOrderTrack = async (req, res) => {
       data: {
         order: {
           _id: order._id,
-          orderStatus: order.orderStatus,
-          totalPrice: order.totalPrice,
-          fulfillmentDate: order.fulfillmentDate,
-          date: order.date,
-          orderDetailsCount: order.orderDetails ? order.orderDetails.length : 0,
+          status: order.status,
+          orderStatus: order.status,
+          totalAmount: order.totalAmount,
+          totalPrice: order.totalAmount,
+          placedAt: order.placedAt,
+          date: order.placedAt,
+          itemsCount: Array.isArray(order.items) ? order.items.length : 0,
         },
       },
     });
@@ -100,11 +132,29 @@ exports.getOrderTrack = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const order = await orderModel.create({ ...req.body, userID: req.user.id, userName: req.user.firstName });
-    const user = await userModel.findByIdAndUpdate(req.user.id, { $push: { order: order._id } }, { new: true, runValidators: false })
-    // user.order.push(order._id)
-    // user.passwordConfirm = undefined;
-    // user.save()
+    let payload;
+    try {
+      payload = buildCreatePayload(req.body, {
+        customerId: req.user.id,
+        guestName:
+          [req.user.firstName, req.user.lastName].filter(Boolean).join(" ") ||
+          req.user.email ||
+          "",
+      });
+    } catch (e) {
+      return res.status(400).json({
+        status: "fail",
+        message: e.message || String(e),
+      });
+    }
+    payload.userID = req.user.id;
+    const order = await orderModel.create(payload);
+    await userModel.findByIdAndUpdate(
+      req.user.id,
+      { $push: { order: order._id } },
+      { new: true, runValidators: false }
+    );
+    await order.populate(populateOrder);
 
     res.status(201).json({
       status: "success",
@@ -115,23 +165,16 @@ exports.createOrder = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      message: err,
+      message: err.message || err,
     });
   }
 };
 
 exports.getOrder = async (req, res) => {
   try {
-    const orderID = req.params.order;
-    // To be fixed later
-    // if (!req.user.order.includes(orderID)) {
-    //   return res.status(400).json({
-    //     status: "fail",
-    //     message:
-    //       "You are trying to access the orders of another user, that's fucked up bruh",
-    //   });
-    // }
-    const order = await orderModel.findById(req.params.order);
+    const order = await orderModel
+      .findById(req.params.order)
+      .populate(populateOrder);
     res.status(200).json({
       status: "success",
       data: {
@@ -148,7 +191,12 @@ exports.getOrder = async (req, res) => {
 
 exports.getUserOrders = async (req, res) => {
   try {
-    const order = await orderModel.find({ userID: req.user.id });
+    const order = await orderModel
+      .find({
+        $or: [{ customerId: req.user.id }, { userID: req.user.id }],
+      })
+      .sort({ placedAt: -1, _id: -1 })
+      .populate(populateOrder);
     res.status(200).json({
       status: "success",
       data: {
@@ -181,49 +229,51 @@ exports.deleteOrder = async (req, res) => {
 
 exports.updateOrder = async (req, res) => {
   try {
-    const order = await orderModel.findByIdAndUpdate(
-      req.params.order,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const order = await orderModel.findById(req.params.order);
+    if (!order) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Order not found",
+      });
+    }
+    await applyOrderPatch(order, req.body, req.user);
+    await order.save();
+    await order.populate(populateOrder);
 
     res.status(200).json({
       status: "success",
       order,
     });
   } catch (err) {
-    res.status(400).json({
+    const payload = {
       status: "fail",
-      message: err,
-    });
+      message: err.message || String(err),
+    };
+    if (err.name === "ValidationError" && err.errors) {
+      payload.errors = Object.fromEntries(
+        Object.entries(err.errors).map(([k, v]) => [k, v.message])
+      );
+    }
+    res.status(400).json(payload);
   }
 };
 
 exports.deliverOrder = async (req, res, next) => {
   try {
-    const order = await orderModel.findByIdAndUpdate(
-      req.params.order,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const order = await orderModel.findById(req.params.order);
+    if (!order) {
+      return res.status(400).json({ status: "fail", message: "Not found" });
+    }
+    await applyOrderPatch(order, req.body, req.user);
+    await order.save();
+    await order.populate(populateOrder);
 
-    req.order = order
-    next()
-
-    // res.status(200).json({
-    //   status: "success",
-    //   order,
-    // });
+    req.order = order;
+    next();
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      message: err,
+      message: err.message || err,
     });
   }
 };

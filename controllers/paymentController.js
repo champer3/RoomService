@@ -1,9 +1,20 @@
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripeLib = require("stripe");
 const Order = require("./../Models/orderModel");
 const userModel = require("./../Models/userModel");
 
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key || key.trim() === "") {
+    throw new Error(
+      "STRIPE_SECRET_KEY is not set. Add it to backend/config.env (get it from Stripe Dashboard → Developers → API keys)."
+    );
+  }
+  return stripeLib(key);
+}
+
 exports.getCheckOutSession = async (req, res, next) => {
   try {
+    const stripe = getStripe();
     const user = req.user;
     let customer;
     if (user.customerID) {
@@ -54,19 +65,19 @@ exports.getCheckOutSession = async (req, res, next) => {
       // order: order.id
     });
   } catch (err) {
-    console.log("CHECKOUT ERROR:", err.message, err.raw);
-
-    // console.log(err.message);
+    console.error("checkout-session error:", err.message, err.type || "", err.code || "");
+    if (err.raw) console.error("Stripe raw:", err.raw);
     res.status(400).json({
       status: "fail",
-      message: "just chill, I have no idea",
-      error: err,
+      message: err.message || "Failed to create checkout session",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
 
 exports.getCardDetails = async (req, res, next) => {
   try {
+    const stripe = getStripe();
     console.log("Getting card details");
     const user = req.user;
     let customer;
@@ -116,17 +127,19 @@ exports.getCardDetails = async (req, res, next) => {
       customer: customer,
     });
   } catch (err) {
-    // console.log(err.message);
+    console.error("payment-sheet (getCardDetails) error:", err.message, err.type || "", err.code || "");
+    if (err.raw) console.error("Stripe raw:", err.raw);
     res.status(400).json({
       status: "fail",
-      message: "just chill, I have no idea",
-      error: err,
+      message: err.message || "Failed to create payment sheet",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
 
 exports.getPaymentMethods = async (req, res, next) => {
   try {
+    const stripe = getStripe();
     const customer = req.user.customerID;
     if (!customer) {
       return res.status(200).json({
@@ -136,7 +149,7 @@ exports.getPaymentMethods = async (req, res, next) => {
       });
     }
     const paymentMethods = await stripe.paymentMethods.list({
-      customer: customer,
+      customer,
       type: "card",
     });
 
@@ -147,10 +160,11 @@ exports.getPaymentMethods = async (req, res, next) => {
 
     // console.log(paymentMethods.data);
   } catch (err) {
+    console.error("payment-methods error:", err.message);
     res.status(400).json({
       status: "fail",
-      message: "just chill, I have no idea",
-      error: err,
+      message: err.message || "Failed to get payment methods",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };

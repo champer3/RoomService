@@ -1,113 +1,172 @@
 const mongoose = require('mongoose');
-const validator = require('validator');
-const { options } = require('../app');
 
-const nutrientSchema = new mongoose.Schema({
-  name: String,
-  value: Number,
-  unit: String,
-});
+const variantChoiceSchema = new mongoose.Schema(
+  {
+    id: { type: String },
+    name: { type: String, default: '' },
+    priceDelta: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
 
-const valueSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-  iamge: String,
-});
+const variantGroupSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    name: { type: String, default: '' },
+    selectionType: {
+      type: String,
+      enum: ['single', 'multiple'],
+      default: 'single',
+    },
+    required: { type: Boolean, default: false },
+    choices: { type: [variantChoiceSchema], default: [] },
+  },
+  { _id: false }
+);
 
-const optionSchema = new mongoose.Schema({
-  name: String,
-  quantity: Number,
-  required: Boolean,
-  values: [valueSchema]
-});
+const productAddonSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    name: { type: String, default: '' },
+    price: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
 
 const productSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: [true, 'A product must have a name'],
-      unique: true,
       trim: true,
-      maxlength: [150, 'A product"s name must have less or equal then 40 characters'],
-      minlength: [3, 'A product"s name must be equal or more then 10 characters'],
+      maxlength: [150, 'Product name is too long'],
+      minlength: [3, 'Product name is too short'],
     },
-    components: {
-      type: [String]
+    slug: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      sparse: true,
+    },
+    shortDescription: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Short description is too long'],
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+    images: {
+      type: [String],
+      default: [],
+    },
+    /** Department the product was created under (resolved from productType slug on create) */
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
     },
     category: {
-      type: String,
-      required: [true, 'A product must always belong to a category']
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      required: [true, 'A product must belong to a category'],
     },
-    subCategory: [String],
-    Brand: {
-      type: String,
+    price: {
+      type: Number,
+      required: [true, 'A product must have a price'],
+      min: 0,
     },
-    extra: Boolean,
+    comparePrice: {
+      type: Number,
+      min: 0,
+    },
+    cost: {
+      type: Number,
+      min: 0,
+    },
     stock: {
       type: Number,
       default: 0,
+      min: 0,
     },
-    nutrients: nutrientSchema,
-    instructions: Boolean,
-    nutrients: {
+    trackInventory: {
+      type: Boolean,
+      default: true,
+    },
+    lowStockThreshold: {
+      type: Number,
+      min: 0,
+    },
+    sku: {
+      type: String,
+      trim: true,
+    },
+    availability: {
+      type: Boolean,
+      default: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    chefSpecial: {
+      type: Boolean,
+      default: false,
+    },
+    /** Search / display tags (Add Product “Tags”) */
+    tags: {
       type: [String],
-      default: []
+      default: [],
     },
-    images: {
-        type: [String],
-        default: []
+    /** Per-department custom fields from DepartmentField definitions */
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
-    options: {
-        type: [String],
-        default: []
+    variantGroups: {
+      type: [variantGroupSchema],
+      default: [],
     },
-    related: {
-        type: [String],
-        default: []
+    addons: {
+      type: [productAddonSchema],
+      default: [],
     },
     ratingsAverage: {
       type: Number,
       default: 4.5,
-      min: [1, 'Rating must be above 1.0'],
-      max: [5, 'Rating must be below 5.0'],
-      set: val => Math.round(val * 10) / 10 // 4.666666, 46.6666, 47, 4.7
+      min: 1,
+      max: 5,
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
-      default: 0
+      default: 0,
     },
     reviews: {
-        type: [String],
-        default: []
+      type: [String],
+      default: [],
     },
-    oldPrice: {
-      type: Number
-    },
-    price: {
-      type: Number,
-      required: [true, 'A tour must have a price']
-    },
-    description: {
-      type: String,
-      trim: true
+    dateAdded: {
+      type: Date,
+      default: Date.now,
     },
     createdAt: {
       type: Date,
-      default: Date.now(),
-      select: false
+      default: Date.now,
+      select: false,
     },
-    availability: {
-      type: Boolean,
-      default: true
-    }
   },
   {
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
   }
 );
 
+productSchema.index({ category: 1 });
+productSchema.index({ department: 1 });
+productSchema.index({ slug: 1 }, { sparse: true });
+productSchema.index({ sku: 1 }, { sparse: true });
 
-const Tour = mongoose.model('Product', productSchema);
+const Product = mongoose.model('Product', productSchema);
 
-module.exports = Tour;
+module.exports = Product;

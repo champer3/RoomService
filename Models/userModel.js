@@ -7,29 +7,15 @@ const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
-      required: [true, "A user must have a first name"],
       trim: true,
-      maxlength: [
-        20,
-        "A user's name must have less or equal then 20 characters",
-      ],
-      minlength: [
-        1,
-        "A user's name must have more or equal then 10 characters",
-      ],
+      maxlength: [20, "A user's name must have less or equal then 20 characters"],
+      default: "",
     },
     lastName: {
       type: String,
-      required: [true, "A user must have a first name"],
       trim: true,
-      maxlength: [
-        20,
-        "A user's name must have less or equal then 20 characters",
-      ],
-      minlength: [
-        1,
-        "A user's name must have more or equal then 10 characters",
-      ],
+      maxlength: [20, "A user's name must have less or equal then 20 characters"],
+      default: "",
     },
     googleID: {
       type: String,
@@ -41,20 +27,29 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, "Please provide your email"],
       unique: true,
+      sparse: true,
       lowercase: true,
-      validate: [validator.isEmail, "Please provide a valid email"],
+      validate: {
+        validator: function (v) {
+          if (!v || v === "") return true;
+          return validator.isEmail(v);
+        },
+        message: "Please provide a valid email",
+      },
     },
     phoneNumber: {
       type: String,
       unique: true,
+      sparse: true,
       lowercase: true,
-      required: [true, "Please provide your phoneNumber"],
-      validate: [
-        validator.isMobilePhone,
-        "Please provide a valid phone number",
-      ],
+      validate: {
+        validator: function (v) {
+          if (!v || v === "") return true;
+          return validator.isMobilePhone(v, "any", { strictMode: false });
+        },
+        message: "Please provide a valid phone number",
+      },
     },
     password: {
       type: String,
@@ -128,18 +123,30 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre('save', async function(next){
-  if(!this.isModified('password')) return next()
+// Explicit sparse unique index so multiple users without a phone (e.g. email/Google sign-up) are allowed.
+// If you see "dup key: { phoneNumber: null }", drop the old index: db.users.dropIndex("phoneNumber_1")
+userSchema.index({ phoneNumber: 1 }, { unique: true, sparse: true });
 
-  this.password = await bcrypt.hash(this.password, 12)
+// At least one of email or phoneNumber required
+userSchema.pre("validate", function (next) {
+  const hasEmail = this.email && this.email.trim() !== "";
+  const hasPhone = this.phoneNumber && this.phoneNumber.trim() !== "";
+  if (!hasEmail && !hasPhone) {
+    next(new Error("User must have at least one of email or phoneNumber"));
+  } else {
+    next();
+  }
+});
 
-  this.passwordConfirm = undefined
-  next()
-})
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  this.passwordConfirm = undefined;
+  next();
+});
 
-userSchema.pre('save', function(next) {
-  if (!this.isModified('password') || this.isNew) return next();
-
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || !this.password || this.isNew) return next();
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });

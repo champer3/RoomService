@@ -17,6 +17,7 @@ const fs = require('fs');
 const OpenAI = require('openai');
 const { runAssistant } = require('./controllers/aiController');
 
+app.use(express.json());
 
 let socketID = {}
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

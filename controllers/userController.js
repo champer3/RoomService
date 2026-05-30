@@ -70,21 +70,12 @@ exports.checkNumber = async (req, res) => {
 
 exports.checkEmail = async (req, res) => {
   try {
-    const getUser = await user.find({email: req.params.email});
-    if(user.length === 0){
-      res.status(200).json({
-        status: "success",
-        message: "User doesn't exist",
-      });
-    } else{
-      res.status(200).json({
-        status: "success",
-        data: {
-          user: getUser,
-        },
-      });
-    }
-    return
+    const getUser = await user.find({ email: req.params.email });
+    res.status(200).json({
+      status: "success",
+      ...(getUser.length === 0 && { message: "User doesn't exist" }),
+      data: { user: getUser },
+    });
   } catch (err) {
     res.status(404).json({
       status: "fail",
@@ -123,12 +114,11 @@ exports.updateMe = async (req, res, next) => {
     );
   }
 
-  // 2) Filtered out unwanted fields names that are not allowed to be updated
-  const filteredBody = filterObj(req.body, 'name', 'email');
+  // 2) Filtered out unwanted fields; allow profile completion (phone, email, names)
+  const filteredBody = filterObj(req.body, "name", "email", "phoneNumber", "firstName", "lastName");
 
-  // 3) Update user document
-  const getUser = await user.find({email: req.params.user});
-  const updatedUser = await user.findByIdAndUpdate(getUser.id, filteredBody, {
+  // 3) Update user document (protect middleware sets req.user)
+  const updatedUser = await user.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true
   });

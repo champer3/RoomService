@@ -14,6 +14,12 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const communicationRoutes = require("./routes/communicationRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const departmentRoutes = require("./routes/departmentRoutes");
+const promotionRoutes = require("./routes/promotionRoutes");
+const appRoutes = require("./routes/appRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
+const path = require("path");
 const dotenv = require("dotenv");
 const cors = require("cors");
 dotenv.config({ path: "./config.env" });
@@ -52,6 +58,12 @@ app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/communications", communicationRoutes);
+app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/departments", departmentRoutes);
+app.use("/api/v1/promotions", promotionRoutes);
+app.use("/api/v1/app", appRoutes);
+app.use("/api/v1/upload", uploadRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 // Phone Number verification using TWILIO
 app.get("/getCode/:number", (req, res) => {
   try {
