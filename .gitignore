@@ -1,5 +1,11 @@
 # Ignore the 'node_modules' directory
 node_modules/
-# Ignore config.env file because it contains sensitive information
+# Environment / secrets (commit only *.example templates)
+.env
+.env.*
+!.env.example
+config.env
+!config.env.example
 *.env
+!*.env.example
 .cache/
