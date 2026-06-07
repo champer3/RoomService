@@ -1,5 +1,6 @@
 const product = require("./../Models/productModel");
 const { buildProductPayload, buildProductUpdatePatch } = require("../utils/productPayload");
+const { getIO } = require("../socketManager");
 
 const populateProduct = {
   path: "category",
@@ -49,6 +50,16 @@ exports.createProduct = async (req, res) => {
       .populate(populateProduct)
       .populate({ path: "department", select: "name slug iconUrl" })
       .lean();
+
+    const io = getIO();
+    if (io) {
+      io.emit('productUpdate', {
+        type: 'created',
+        productId: (populated || newProduct)._id,
+        product: populated || newProduct,
+      });
+    }
+
     res.status(201).json({
       status: "success",
       data: {
@@ -87,6 +98,14 @@ exports.deleteProduct = async (req, res) => {
   try {
     await product.findByIdAndDelete(req.params.product);
 
+    const io = getIO();
+    if (io) {
+      io.emit('productUpdate', {
+        type: 'deleted',
+        productId: req.params.product,
+      });
+    }
+
     res.status(204).json({
       status: "success",
       data: null,
@@ -106,6 +125,16 @@ exports.updateProduct = async (req, res) => {
       .findByIdAndUpdate(req.params.product, payload, { new: true, runValidators: true })
       .populate(populateProduct)
       .populate({ path: "department", select: "name slug iconUrl" });
+
+    const io = getIO();
+    if (io) {
+      io.emit('productUpdate', {
+        type: 'updated',
+        productId: req.params.product,
+        product: singleProduct,
+      });
+    }
+
     res.status(200).json({
       status: "success",
       product: singleProduct,

@@ -5,6 +5,8 @@ const {
   buildCreatePayload,
   applyOrderPatch,
 } = require("../utils/orderNormalize");
+const { getIO, getSocketID } = require("../socketManager");
+const { sendPushToUser } = require("../pushService");
 
 const populateOrder = [
   {
@@ -236,9 +238,58 @@ exports.updateOrder = async (req, res) => {
         message: "Order not found",
       });
     }
+    const previousStatus = order.status;
     await applyOrderPatch(order, req.body, req.user);
     await order.save();
     await order.populate(populateOrder);
+
+    const io = getIO();
+    const socketID = getSocketID();
+
+    if (order.status !== previousStatus) {
+      const customerIdRaw = order.customerId;
+      const userID = (customerIdRaw?._id || customerIdRaw || order.userID || "").toString();
+      const userSocketID = socketID[userID];
+
+      console.log('[OrderController] Status changed:', previousStatus, '->', order.status, '| userID:', userID, '| userSocketID:', userSocketID);
+
+      if (io && userSocketID) {
+        let message = `Your order status has been updated to: ${order.status}`;
+        if (order.status === 'delivered') message = "Your order has been delivered!";
+        else if (order.status === 'out_for_delivery' || order.status === 'assigned') message = "Your order is out for delivery";
+        else if (order.status === 'ready') message = "Your order is ready";
+        else if (order.status === 'confirmed') message = "Your order has been confirmed";
+        else if (order.status === 'preparing') message = "Your order is being prepared";
+
+        io.to(userSocketID).emit('orderUpdate', {
+          message,
+          orderId: order._id.toString(),
+          status: order.status,
+        });
+      }
+
+      // Send push notification to user regardless of socket connection
+      let pushMsg = `Your order status has been updated to: ${order.status}`;
+      if (order.status === 'delivered') pushMsg = "Your order has been delivered!";
+      else if (order.status === 'out_for_delivery' || order.status === 'assigned') pushMsg = "Your order is out for delivery";
+      else if (order.status === 'ready') pushMsg = "Your order is ready for pickup";
+      else if (order.status === 'confirmed') pushMsg = "Your order has been confirmed";
+      else if (order.status === 'preparing') pushMsg = "Your order is being prepared";
+
+      sendPushToUser(userID, "Order Update", pushMsg, { orderId: order._id.toString(), status: order.status });
+    }
+
+    if (io) {
+      const adminRoom = io.sockets.adapter.rooms.get('admin');
+      console.log('[OrderController] Emitting orderStatusUpdate to admin room. Room exists:', !!adminRoom, '| size:', adminRoom?.size || 0, '| status:', order.status);
+      io.to('admin').emit('orderStatusUpdate', {
+        orderId: order._id.toString(),
+        status: order.status,
+        previousStatus,
+      });
+    } else {
+      console.log('[OrderController] WARNING: io is null, cannot emit');
+    }
 
     res.status(200).json({
       status: "success",

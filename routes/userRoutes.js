@@ -15,7 +15,24 @@ router.post('/forgotPassword', authController.forgotPassword)
 router.patch('/resetPassword/:token', authController.resetPassword)
 router.patch('/updatePassword/:email', authController.updatePassword)
 
+router.post('/push-token', authController.protect, userController.registerPushToken);
+router.delete('/push-token', authController.protect, userController.unregisterPushToken);
 
+// Address endpoints
+router.get('/addresses', authController.protect, userController.getAddresses);
+router.put('/addresses', authController.protect, userController.syncAddresses);
+router.post('/addresses', authController.protect, userController.addAddress);
+router.delete('/addresses/:addressId', authController.protect, userController.deleteAddress);
+
+// Cart endpoints
+router.get('/cart', authController.protect, userController.getCart);
+router.put('/cart', authController.protect, userController.syncCart);
+router.delete('/cart', authController.protect, userController.clearCart);
+
+// Favorites endpoints
+router.get('/favorites', authController.protect, userController.getFavorites);
+router.put('/favorites', authController.protect, userController.syncFavorites);
+router.post('/favorites/toggle', authController.protect, userController.toggleFavorite);
 
 router
   .route("/")

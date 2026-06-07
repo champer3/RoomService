@@ -86,7 +86,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "An image based on the users name",
     },
-    address: [String],
+    address: [
+      {
+        name: { type: String, default: "" },
+        address: { type: String, default: "" },
+        nameNo: { type: String, default: "" },
+        number: { type: String, default: "" },
+        id: { type: Number, default: 0 },
+        latitude: { type: Number },
+        longitude: { type: Number },
+      },
+    ],
     dob: {
       type: Date,
       validate: [validator.isDate, "give a valid date of birth"],
@@ -115,7 +125,15 @@ const userSchema = new mongoose.Schema(
     passwordResetToken: String,
     passwordResetExpires: Date,
     verifyCode: String,
-    referenceID: String
+    referenceID: String,
+    expoPushTokens: {
+      type: [String],
+      default: [],
+    },
+    favorites: {
+      type: [String],
+      default: [],
+    },
   },
   {
     toJSON: { virtuals: true },

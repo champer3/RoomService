@@ -1,5 +1,6 @@
 const Category = require("../Models/categoryModel");
 const Department = require("../Models/departmentModel");
+const { getIO } = require("../socketManager");
 
 function slugify(text) {
   return text
@@ -87,6 +88,12 @@ exports.createCategory = async (req, res) => {
       "department",
       "name slug"
     );
+
+    const io = getIO();
+    if (io) {
+      io.emit('categoryUpdate', { type: 'created', category: populated });
+    }
+
     res.status(201).json({
       status: "success",
       data: { category: populated },
@@ -130,6 +137,12 @@ exports.updateCategory = async (req, res) => {
         message: "Category not found",
       });
     }
+
+    const io = getIO();
+    if (io) {
+      io.emit('categoryUpdate', { type: 'updated', category });
+    }
+
     res.status(200).json({
       status: "success",
       data: { category },
@@ -151,6 +164,12 @@ exports.deleteCategory = async (req, res) => {
         message: "Category not found",
       });
     }
+
+    const io = getIO();
+    if (io) {
+      io.emit('categoryUpdate', { type: 'deleted', categoryId: req.params.id });
+    }
+
     res.status(204).send();
   } catch (err) {
     res.status(500).json({

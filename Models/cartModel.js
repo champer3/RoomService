@@ -8,21 +8,18 @@ const cartSchema = new mongoose.Schema(
     },
     totalPrice: {
       type: Number,
-      required: [true, "An order must always have a price"],
+      default: 0,
     },
-    productID: [
-      {
-        type: mongoose.Schema.ObjectId,
-        ref: "Product",
-        required: [true, "Review must belong to a Product."],
-      },
-    ],
+    items: {
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
+    },
     userID: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
-      required: [true, "Review must belong to a user"],
-      unique: true
-    }
+      required: [true, "Cart must belong to a user"],
+      unique: true,
+    },
   },
   {
     toJSON: { virtuals: true },

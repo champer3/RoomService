@@ -3,10 +3,13 @@ const http = require('http');
 const dotenv = require('dotenv')
 const express = require('express')
 const app = require('./app');
-// const server = http.createServer(express());
 const server = http.createServer(app);
-const io = require('socket.io')(server)
-// const io = require('socket.io')(app)
+const io = require('socket.io')(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+})
 dotenv.config({ path: './config.env' })
 const jwt = require("jsonwebtoken");
 const authController = require("./controllers/authController")
@@ -16,10 +19,13 @@ const path = require('path');
 const fs = require('fs');
 const OpenAI = require('openai');
 const { runAssistant } = require('./controllers/aiController');
+const { setIO, setSocketIDEntry, removeSocketIDEntry, getSocketID } = require('./socketManager');
+const { sendPushToUser } = require('./pushService');
 
 app.use(express.json());
 
-let socketID = {}
+setIO(io);
+let socketID = getSocketID();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const storage = multer.diskStorage({
@@ -112,17 +118,23 @@ app.post('/api/v1/ai-audio', upload.single('audio'), async (req, res) => {
 
 const identifyUser = (socket, next) => {
   const token = socket.handshake.query.token;
-  console.log("Token from middleware", token)
+  const role = socket.handshake.query.role;
+  console.log('[Socket Middleware] Connection attempt | role:', role || 'user', '| has token:', !!token);
+  
   if (!token) {
+    console.log('[Socket Middleware] REJECTED - no token provided');
     return next(new Error('Unauthorized connection'));
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     socket.userID = decoded.id;
-    socketID[decoded.id] = decoded.id
+    setSocketIDEntry(decoded.id, decoded.id);
+    socketID = getSocketID();
+    console.log('[Socket Middleware] AUTHORIZED | userID:', decoded.id);
     next();
   } catch (err) {
+    console.log('[Socket Middleware] REJECTED - invalid token:', err.message);
     return next(new Error('Invalid token'));
   }
 };
@@ -131,55 +143,79 @@ const identifyUser = (socket, next) => {
 io.use(identifyUser);
 
 io.on('connection', (socket) => {
-  console.log('A client connected');
-  const token = socket.handshake.query.token;
-  console.log("Received Token")
+  console.log('[Socket] Client connected:', socket.id, '| role:', socket.handshake.query.role || 'user');
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
-    if (socket.userID && socketID[socket.userID]) {
-      delete socketID[socket.userID]; // Remove socket ID on disconnect
+    console.log('[Socket] Client disconnected:', socket.id);
+    if (socket.userID) {
+      removeSocketIDEntry(socket.userID);
+      socketID = getSocketID();
     }
   });
-  // socket.join(socket.userID)
 
-  if(socket.handshake.query.role === 'admin'){
-    console.log("The client that connected is an admin")
-    socket.join('admin')
-  } else{
-    console.log('connected as a normal user')
-    socket.join(socket.userID)
+  if (socket.handshake.query.role === 'admin') {
+    socket.join('admin');
+    console.log('[Socket] Joined admin room. Admin room size:', io.sockets.adapter.rooms.get('admin')?.size);
+    socket.emit('ping', { message: 'Socket connection confirmed' });
+  } else {
+    socket.join(socket.userID);
+    console.log('[Socket] Joined user room:', socket.userID);
   }
 
   socket.on('order', (data) => {
-    console.log('Received message:', data);
-    socket.broadcast.emit('order', data);
+    const adminRoom = io.sockets.adapter.rooms.get('admin');
+    console.log('[Socket] "order" event from:', socket.id, '| data:', data);
+    console.log('[Socket] Admin room exists:', !!adminRoom, '| size:', adminRoom?.size || 0);
+    io.to('admin').emit('order', data);
+    console.log('[Socket] Emitted "order" to admin room');
   });
-
-  // socket.on('orderInDelivery', (data) => {
-  //   console.log('Received OrderInDelivery message:', data);
-  //   socket.broadcast.emit('orderInDelivery', data);
-  // });
 });
 
 
 app.patch("/api/v1/orders/deliver/:order", authController.protect, authController.restrictTo("admin", "owner", "driver"), orderController.deliverOrder, (req, res) => {
-  console.log("sdsjdvnskndvjnskjdnvjknskjvkjsfbvkjbjfksvbjksbfkvjbkjfbvjk")
-  const userID = req.order.userID.toString();
+  const customerIdRaw = req.order.customerId;
+  const userID = (customerIdRaw?._id || customerIdRaw || req.order.userID || "").toString();
   const userSocketID = socketID[userID];
-  console.log("We have a userSocketID", userSocketID)
-  console.log('req.order.orderStatus', req.order.orderStatus)
+  const status = req.order.status;
+
+  console.log('[Deliver] Order updated | orderId:', req.order._id.toString(), '| status:', status);
+  console.log('[Deliver] Resolved userID:', userID, '| userSocketID:', userSocketID);
+
   if (userSocketID) {
-    if (req.order.orderStatus === 'Delivered'){
-      console.log("THE ORDER IS NOW DELIVERED", req.order.orderStatus)
-      io.to(socketID[req.order.userID.toString()]).emit('delivered', { message: "Your order has been delivered", orderId: req.order._id.toString()});
-    } else if (req.order.orderStatus ==='Ready for Delivery'){
-      console.log("THE ORDER HAS BEEN SENT OUT FOR DELIVERY", req.order.orderStatus)
-      io.to(socketID[req.order.userID.toString()]).emit('orderInDelivery', { message: "Your order is out for delivery", orderId: req.order._id.toString() });
+    if (status === 'delivered' || status === 'Delivered') {
+      io.to(userSocketID).emit('orderUpdate', { 
+        message: "Your order has been delivered", 
+        orderId: req.order._id.toString(),
+        status: 'delivered'
+      });
+    } else if (status === 'out_for_delivery' || status === 'assigned' || status === 'Ready for Delivery') {
+      io.to(userSocketID).emit('orderUpdate', { 
+        message: "Your order is out for delivery", 
+        orderId: req.order._id.toString(),
+        status: status
+      });
+    } else {
+      io.to(userSocketID).emit('orderUpdate', { 
+        message: `Your order status has been updated to: ${status}`, 
+        orderId: req.order._id.toString(),
+        status: status
+      });
     }
-  } else {
-    console.log('User is not connected or no socket ID found')
   }
+
+  // Send push notification to user regardless of socket connection
+  let pushMessage = `Your order status has been updated to: ${status}`;
+  if (status === 'delivered' || status === 'Delivered') pushMessage = "Your order has been delivered!";
+  else if (status === 'out_for_delivery' || status === 'assigned') pushMessage = "Your order is out for delivery";
+  else if (status === 'ready') pushMessage = "Your order is ready for pickup";
+  else if (status === 'preparing') pushMessage = "Your order is being prepared";
+
+  sendPushToUser(userID, "Order Update", pushMessage, { orderId: req.order._id.toString(), status });
+
+  io.to('admin').emit('orderStatusUpdate', {
+    orderId: req.order._id.toString(),
+    status: status,
+  });
 
   res.status(200).json({
     status: "success",
