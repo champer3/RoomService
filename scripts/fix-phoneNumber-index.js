@@ -2,14 +2,14 @@
  * One-time fix for "dup key: { phoneNumber: null }" when signing up without a phone number.
  * The old unique index on phoneNumber was not sparse, so only one user could have null phoneNumber.
  * Run from backend folder: node scripts/fix-phoneNumber-index.js
- * Requires: config.env with DATABASE set (same as server).
+ * Requires: .env with DATABASE set (same as server).
  */
-require('dotenv').config({ path: require('path').join(__dirname, '..', 'config.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 
 const raw = process.env.DATABASE || process.env.MONGODB_URI || process.env.DATABASE_LOCAL;
 if (!raw) {
-  console.error('Set DATABASE in config.env');
+  console.error('Set DATABASE in .env');
   process.exit(1);
 }
 const db = raw.replace('<PASSWORD>', process.env.DATABASE_PASSWORD || '');

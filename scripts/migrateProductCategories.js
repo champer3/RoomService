@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 
-dotenv.config({ path: path.join(__dirname, '..', 'config.env') });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const Category = require('../Models/categoryModel');
 const Department = require('../Models/departmentModel');
@@ -20,7 +20,7 @@ const DB = process.env.DATABASE
   : null;
 
 if (!DB) {
-  console.error('DATABASE connection string is not defined in config.env');
+  console.error('DATABASE connection string is not defined in .env');
   process.exit(1);
 }
 

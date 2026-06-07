@@ -22,7 +22,7 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const path = require("path");
 const dotenv = require("dotenv");
 const cors = require("cors");
-dotenv.config({ path: "./config.env" });
+dotenv.config({ path: "./.env" });
 const user = require("./Models/userModel");
 const authController = require("./controllers/authController");
 const app = express();

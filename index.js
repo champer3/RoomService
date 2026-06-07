@@ -1,6 +1,7 @@
+require('dotenv').config({ path: './.env' });
+
 const mongoose = require('mongoose')
 const http = require('http');
-const dotenv = require('dotenv')
 const express = require('express')
 const app = require('./app');
 const server = http.createServer(app);
@@ -10,7 +11,6 @@ const io = require('socket.io')(server, {
     methods: ["GET", "POST"],
   },
 })
-dotenv.config({ path: './config.env' })
 const jwt = require("jsonwebtoken");
 const authController = require("./controllers/authController")
 const orderController = require("./controllers/orderController");

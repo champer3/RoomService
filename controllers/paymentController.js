@@ -6,7 +6,7 @@ function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key || key.trim() === "") {
     throw new Error(
-      "STRIPE_SECRET_KEY is not set. Add it to backend/config.env (get it from Stripe Dashboard → Developers → API keys)."
+      "STRIPE_SECRET_KEY is not set. Add it to backend/.env (get it from Stripe Dashboard → Developers → API keys)."
     );
   }
   return stripeLib(key);

@@ -1,4 +1,5 @@
 const user = require("./../Models/userModel");
+const { getIO } = require('../socketManager');
 
 exports.registerPushToken = async (req, res) => {
   try {
@@ -316,6 +317,16 @@ exports.syncCart = async (req, res) => {
       { items, dateUpdate: Date.now() },
       { new: true, upsert: true, runValidators: true }
     );
+    const io = getIO();
+    if (io) {
+      const socketId = req.headers['x-socket-id'];
+      const room = io.to(req.user.id);
+      if (socketId) {
+        room.except(socketId).emit('cartSync', { items: cartDoc.items });
+      } else {
+        room.emit('cartSync', { items: cartDoc.items });
+      }
+    }
     res.status(200).json({ status: "success", data: cartDoc.items });
   } catch (err) {
     res.status(500).json({ status: "fail", message: err.message });
@@ -328,6 +339,16 @@ exports.clearCart = async (req, res) => {
       { userID: req.user.id },
       { items: [], dateUpdate: Date.now() }
     );
+    const io = getIO();
+    if (io) {
+      const socketId = req.headers['x-socket-id'];
+      const room = io.to(req.user.id);
+      if (socketId) {
+        room.except(socketId).emit('cartSync', { items: [] });
+      } else {
+        room.emit('cartSync', { items: [] });
+      }
+    }
     res.status(200).json({ status: "success", data: [] });
   } catch (err) {
     res.status(500).json({ status: "fail", message: err.message });
@@ -349,6 +370,16 @@ exports.syncFavorites = async (req, res) => {
   try {
     const { favorites } = req.body;
     await user.findByIdAndUpdate(req.user.id, { favorites: favorites || [] });
+    const io = getIO();
+    if (io) {
+      const socketId = req.headers['x-socket-id'];
+      const room = io.to(req.user.id);
+      if (socketId) {
+        room.except(socketId).emit('favoritesSync', { ids: favorites || [] });
+      } else {
+        room.emit('favoritesSync', { ids: favorites || [] });
+      }
+    }
     res.status(200).json({ status: "success", data: favorites || [] });
   } catch (err) {
     res.status(500).json({ status: "fail", message: err.message });
@@ -367,6 +398,16 @@ exports.toggleFavorite = async (req, res) => {
       favs.splice(idx, 1);
     }
     await user.findByIdAndUpdate(req.user.id, { favorites: favs });
+    const io = getIO();
+    if (io) {
+      const socketId = req.headers['x-socket-id'];
+      const room = io.to(req.user.id);
+      if (socketId) {
+        room.except(socketId).emit('favoritesSync', { ids: favs });
+      } else {
+        room.emit('favoritesSync', { ids: favs });
+      }
+    }
     res.status(200).json({ status: "success", data: favs });
   } catch (err) {
     res.status(500).json({ status: "fail", message: err.message });

@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 
-dotenv.config({ path: path.join(__dirname, '..', 'config.env') });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const LEGACY_KEYS = [
   'Brand',
@@ -26,7 +26,7 @@ async function run() {
     ? process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD || '')
     : null;
   if (!DB) {
-    console.error('DATABASE is not defined in config.env');
+    console.error('DATABASE is not defined in .env');
     process.exit(1);
   }
   await mongoose.connect(DB, { dbName: process.env.DB_NAME || 'RoomService' });
